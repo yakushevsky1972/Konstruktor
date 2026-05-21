@@ -1,0 +1,2887 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DoorHan — Конструктор + Калькулятор</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#C8102E;--red2:#9C0D23;--red-bg:#FDEDEF;
+  --bg:#F2F0EC;--bg2:#E8E4DC;--sidebar:#FFFFFF;
+  --border:#D4CFC6;--border2:#BDB8AF;
+  --text:#1A1614;--text2:#4A4440;--text3:#8A837A;
+  --green:#1A6B3C;--green-bg:#E8F5EE;
+  --amber:#B85C00;--amber-bg:#FFF3E0;
+  --blue:#0A3D8F;--blue-bg:#E8F0FB;
+  --purple:#5B2D9E;--purple-bg:#F0EBF8;
+  --sans:'IBM Plex Sans',sans-serif;
+  --mono:'IBM Plex Mono',monospace;
+  --display:'Bebas Neue',sans-serif;
+}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);
+  height:100vh;display:flex;flex-direction:column;overflow:hidden;user-select:none;}
+
+/* ── HEADER */
+.header{height:58px;background:var(--red);display:flex;align-items:center;
+  padding:0 18px;gap:16px;flex-shrink:0;}
+.header-logo{font-family:var(--display);font-size:30px;letter-spacing:.06em;color:#fff;white-space:nowrap;}
+.header-sep{width:1px;height:28px;background:rgba(255,255,255,.3);}
+.header-title{font-family:var(--mono);font-size:12px;color:rgba(255,255,255,.85);
+  letter-spacing:.04em;text-transform:uppercase;}
+.header-spacer{flex:1;}
+.hstats{display:flex;gap:20px;}
+.hstat{text-align:right;}
+.hstat-val{font-family:var(--mono);font-size:16px;font-weight:600;color:#fff;line-height:1.1;}
+.hstat-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.6);}
+.hstat-val.big{font-size:19px;color:#FFD700;}
+
+/* ── WORKSPACE */
+.workspace{flex:1;display:flex;overflow:hidden;}
+
+/* ── LEFT SIDEBAR (tools) */
+.sidebar{width:290px;flex-shrink:0;background:var(--sidebar);
+  border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;}
+.sidebar::-webkit-scrollbar{width:4px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+.sb-section{padding:13px 14px 12px;border-bottom:1px solid var(--border);}
+.sb-title{font-family:var(--mono);font-size:11px;text-transform:uppercase;
+  letter-spacing:.12em;color:var(--text3);margin-bottom:10px;}
+
+.site-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.site-field label{display:block;font-size:11px;color:var(--text3);font-family:var(--mono);
+  text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;}
+.site-field input,.sb-select{width:100%;background:var(--bg);border:1px solid var(--border2);
+  color:var(--text);font-family:var(--mono);font-size:14px;padding:7px 9px;
+  border-radius:4px;outline:none;transition:border-color .15s;appearance:none;}
+.sb-select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 8px center;padding-right:24px;}
+.site-field input:focus,.sb-select:focus{border-color:var(--red);background:#fff;}
+.apply-btn{width:100%;margin-top:10px;padding:10px;background:var(--red);color:#fff;border:none;
+  font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.06em;
+  text-transform:uppercase;border-radius:4px;cursor:pointer;transition:background .15s;}
+.apply-btn:hover{background:var(--red2);}
+
+.module-palette{display:flex;flex-direction:column;gap:6px;}
+.mod-item{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--bg);
+  border:1.5px solid var(--border);border-radius:5px;cursor:pointer;transition:all .13s;}
+.mod-item:hover,.mod-item.selected{border-color:var(--red);background:var(--red-bg);}
+.mod-preview{flex-shrink:0;border-radius:2px;}
+.mod-info{flex:1;min-width:0;}
+.mod-name{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--text);}
+.mod-dims{font-family:var(--mono);font-size:11px;color:var(--text3);margin-top:2px;}
+.mod-area{font-family:var(--mono);font-size:11px;color:var(--red);margin-top:2px;}
+
+.tools-row{display:flex;gap:6px;}
+.tool-btn{flex:1;padding:8px 3px;background:var(--bg);border:1.5px solid var(--border);
+  color:var(--text2);font-family:var(--mono);font-size:11px;letter-spacing:.04em;
+  text-transform:uppercase;border-radius:4px;cursor:pointer;text-align:center;transition:all .13s;}
+.tool-btn:hover{border-color:var(--border2);background:var(--bg2);}
+.tool-btn.active{background:var(--red);border-color:var(--red);color:#fff;}
+.tool-btn .tb-icon{font-size:17px;display:block;margin-bottom:2px;}
+.snap-info{font-family:var(--mono);font-size:11px;color:var(--text3);padding:6px 0 2px;text-align:center;}
+
+/* results rows in left sidebar */
+.res-block{display:flex;flex-direction:column;gap:6px;}
+.res-row{display:flex;justify-content:space-between;align-items:baseline;
+  padding:7px 10px;background:var(--bg);border-radius:4px;border-left:3px solid transparent;}
+.res-row.acc-red{border-left-color:var(--red);}
+.res-row.acc-amber{border-left-color:var(--amber);}
+.res-row.acc-green{border-left-color:var(--green);}
+.res-row.acc-blue{border-left-color:var(--blue);}
+.res-label{font-size:11px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;letter-spacing:.04em;}
+.res-val{font-family:var(--mono);font-size:16px;font-weight:600;color:var(--text);}
+.res-unit{font-size:11px;color:var(--text3);font-weight:400;}
+
+.mod-list{display:flex;flex-direction:column;gap:4px;max-height:150px;overflow-y:auto;}
+.mod-list::-webkit-scrollbar{width:3px;}
+.mod-list::-webkit-scrollbar-thumb{background:var(--border2);}
+.mod-list-item{display:flex;align-items:center;justify-content:space-between;
+  padding:6px 9px;background:var(--bg);border-radius:3px;
+  font-family:var(--mono);font-size:12px;color:var(--text2);
+  border-left:2px solid transparent;cursor:pointer;transition:all .1s;}
+.mod-list-item:hover,.mod-list-item.highlighted{border-left-color:var(--red);background:var(--red-bg);color:var(--text);}
+.mli-del{color:var(--border2);font-size:14px;cursor:pointer;padding:0 3px;}
+.mli-del:hover{color:var(--red);}
+
+/* ── CANVAS */
+.canvas-wrap{flex:1;position:relative;overflow:hidden;background:#FFFFFF;cursor:crosshair;}
+#main-canvas{position:absolute;top:0;left:0;}
+
+/* ── RIGHT PANEL (cost calculator) */
+.right-panel{width:310px;flex-shrink:0;background:var(--sidebar);
+  border-left:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;}
+.right-panel::-webkit-scrollbar{width:4px;}
+.right-panel::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+.rp-header{padding:12px 14px 10px;border-bottom:2px solid var(--red);display:flex;align-items:center;gap:8px;}
+.rp-header-icon{font-size:18px;}
+.rp-header-title{font-family:var(--mono);font-size:12px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.08em;color:var(--text);}
+
+.rp-section{padding:12px 13px 11px;border-bottom:1px solid var(--border);}
+.rp-title{font-family:var(--mono);font-size:10px;text-transform:uppercase;
+  letter-spacing:.1em;color:var(--text3);margin-bottom:9px;}
+
+.rp-field{margin-bottom:9px;}
+.rp-field:last-child{margin-bottom:0;}
+.rp-label{display:block;font-size:10px;color:var(--text3);font-family:var(--mono);
+  text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;}
+.rp-select,.rp-input{width:100%;background:var(--bg);border:1px solid var(--border2);
+  color:var(--text);font-family:var(--mono);font-size:13px;padding:6px 8px;
+  border-radius:4px;outline:none;transition:border-color .15s;appearance:none;}
+.rp-select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 8px center;padding-right:24px;}
+.rp-select:focus,.rp-input:focus{border-color:var(--red);background:#fff;}
+
+.opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.opt-check{display:flex;align-items:center;gap:6px;padding:6px 8px;
+  border:1px solid var(--border);border-radius:4px;cursor:pointer;
+  font-size:11px;color:var(--text2);background:var(--bg);transition:all .13s;}
+.opt-check:hover{background:var(--bg2);}
+.opt-check input{accent-color:var(--red);width:13px;height:13px;flex-shrink:0;}
+.opt-check.checked{background:var(--red-bg);border-color:var(--red);color:var(--text);}
+
+.range-row{display:flex;align-items:center;gap:8px;}
+input[type=range]{flex:1;height:4px;appearance:none;background:var(--border);
+  border-radius:2px;outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{appearance:none;width:15px;height:15px;
+  border-radius:50%;background:var(--red);cursor:pointer;border:2px solid #fff;
+  box-shadow:0 1px 3px rgba(0,0,0,.2);}
+.range-val{font-family:var(--mono);font-size:13px;font-weight:600;min-width:28px;text-align:right;color:var(--text);}
+
+.calc-btn{width:100%;padding:11px;background:var(--red);color:#fff;border:none;
+  font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.06em;
+  text-transform:uppercase;border-radius:4px;cursor:pointer;transition:background .15s;}
+.calc-btn:hover{background:var(--red2);}
+
+/* cost results */
+.cost-summary{padding:13px;}
+.cost-big{background:var(--red-bg);border:1.5px solid var(--red);border-radius:6px;
+  padding:12px 14px;margin-bottom:10px;text-align:center;}
+.cost-big-val{font-family:var(--mono);font-size:24px;font-weight:700;color:var(--red);}
+.cost-big-sub{font-size:11px;color:var(--text3);margin-top:2px;font-family:var(--mono);}
+
+.cost-rows{display:flex;flex-direction:column;gap:5px;}
+.cost-row{display:flex;justify-content:space-between;align-items:baseline;
+  padding:6px 9px;background:var(--bg);border-radius:4px;}
+.cost-row.total{background:var(--text);border-radius:5px;padding:9px 11px;}
+.cost-row-label{font-size:11px;font-family:var(--mono);color:var(--text3);}
+.cost-row.total .cost-row-label{color:rgba(255,255,255,.7);font-size:11px;}
+.cost-row-val{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--text);}
+.cost-row.total .cost-row-val{color:#FFD700;font-size:15px;}
+.cost-note{font-size:11px;color:var(--text3);margin-top:8px;line-height:1.6;font-family:var(--mono);}
+
+.notice{padding:8px 10px;border-radius:4px;font-size:11px;line-height:1.6;margin-top:8px;font-family:var(--mono);}
+.notice-warn{background:var(--amber-bg);color:var(--amber);border-left:3px solid var(--amber);}
+.notice-info{background:var(--blue-bg);color:var(--blue);border-left:3px solid var(--blue);}
+
+/* ── TOOLTIP */
+.tooltip{position:fixed;background:#fff;border:1px solid var(--border2);border-radius:4px;
+  padding:5px 10px;font-family:var(--mono);font-size:10px;color:var(--text);
+  pointer-events:none;z-index:999;display:none;white-space:nowrap;
+  box-shadow:0 2px 8px rgba(0,0,0,.12);}
+
+/* ── CTX MENU */
+.ctx-menu{position:fixed;background:#fff;border:1px solid var(--border2);border-radius:5px;
+  padding:4px;z-index:1000;display:none;min-width:160px;
+  box-shadow:0 4px 16px rgba(0,0,0,.14);}
+.ctx-item{padding:8px 12px;font-family:var(--mono);font-size:11px;color:var(--text2);
+  cursor:pointer;border-radius:3px;display:flex;align-items:center;gap:8px;}
+.ctx-item:hover{background:var(--bg);color:var(--text);}
+.ctx-item.danger:hover{background:var(--red-bg);color:var(--red);}
+.ctx-sep{height:1px;background:var(--border);margin:3px 0;}
+
+/* ── BOTTOM BAR */
+/* ── CLIENT DATA */
+.client-field{margin-bottom:8px;}
+.client-field:last-child{margin-bottom:0;}
+.client-field label{display:block;font-size:10px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;}
+.client-field input[type=text],.client-field input[type=email],.client-field input[type=tel]{
+  width:100%;background:var(--bg);border:1px solid var(--border2);
+  color:var(--text);font-family:var(--mono);font-size:13px;
+  padding:6px 8px;border-radius:4px;outline:none;transition:border-color .15s;}
+.client-field input:focus{border-color:var(--red);background:#fff;}
+.messengers-row{display:flex;gap:6px;margin-top:2px;}
+.msg-check{
+  display:flex;align-items:center;gap:5px;
+  padding:5px 8px;border:1.5px solid var(--border);
+  border-radius:4px;cursor:pointer;font-size:11px;font-family:var(--mono);
+  color:var(--text2);background:var(--bg);transition:all .13s;
+  user-select:none;flex:1;justify-content:center;}
+.msg-check input{display:none;}
+.msg-check.on-tg{border-color:#29A8EB;background:#E8F6FD;color:#005F8A;}
+.msg-check.on-wa{border-color:#25D366;background:#E8FBF0;color:#076E3B;}
+.msg-icon{font-size:15px;}
+
+.bottom-bar{height:28px;background:var(--sidebar);border-top:1px solid var(--border);
+  display:flex;align-items:center;padding:0 13px;gap:16px;
+  font-family:var(--mono);font-size:11px;color:var(--text3);flex-shrink:0;}
+.bb-item{display:flex;gap:5px;align-items:center;}
+.bb-item span{color:var(--text2);font-weight:600;}
+.bb-sep{width:1px;height:11px;background:var(--border);}
+
+.divider{height:1px;background:var(--border);margin:8px 0;}
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<div class="header">
+  <div class="header-logo">
+    <div style="background:#fff;border-radius:6px;padding:2px 8px;display:flex;align-items:center;gap:8px;">
+      <img src="https://fabok.ru/wp-content/uploads/2022/05/cropped-Цвет-круг-1-русский.png"
+           style="height:36px;width:auto;" onerror="this.style.display='none'" alt="">
+      <span style="font-family:var(--display);font-size:26px;letter-spacing:.06em;color:#C8102E;line-height:1;">ФАБРИКА ОКОН</span>
+    </div>
+  </div>
+  <div class="header-sep"></div>
+  <div class="header-title">Конструктор + Калькулятор стоимости DoorHan</div>
+  <div class="header-spacer"></div>
+  <div class="hstats">
+    <div class="hstat"><div class="hstat-val" id="hs-count">0</div><div class="hstat-lbl">Модулей</div></div>
+    <div class="hstat"><div class="hstat-val" id="hs-area">0.0</div><div class="hstat-lbl">Пл. 1 эт. м²</div></div>
+    <div class="hstat"><div class="hstat-val" id="hs-fullarea">0.0</div><div class="hstat-lbl">Полн. пл. м²</div></div>
+    <div class="hstat"><div class="hstat-val" id="hs-volume">0.0</div><div class="hstat-lbl">Объём м³</div></div>
+    <div class="hstat"><div class="hstat-val" id="hs-panel">0.0</div><div class="hstat-lbl">Сэндвич м²</div></div>
+    <div class="hstat"><div class="hstat-val big" id="hs-cost">—</div><div class="hstat-lbl">Стоимость ₽</div></div>
+    <div class="hstat"><div class="hstat-val big" id="hs-perm2">—</div><div class="hstat-lbl">₽ / м²</div></div>
+  </div>
+</div>
+
+<div class="workspace">
+
+  <!-- ═══ LEFT: TOOLS ═══ -->
+  <div class="sidebar">
+
+    <!-- КЛИЕНТ -->
+    <div class="sb-section">
+      <div class="sb-title">Данные клиента</div>
+      <div class="client-field">
+        <label>ФИО / Организация</label>
+        <input type="text" id="cl-name" placeholder="Иванов Иван Иванович">
+      </div>
+      <div class="client-field">
+        <label>Телефон</label>
+        <input type="tel" id="cl-phone" placeholder="+7 (___) ___-__-__" value="+7 " oninput="formatPhone(this)" onkeydown="phoneKeydown(event,this)">
+      </div>
+      <div class="client-field">
+        <label>Мессенджеры</label>
+        <div class="messengers-row">
+          <label class="msg-check" id="cl-tg-label" onclick="toggleMsg(this,'on-tg')">
+            <input type="checkbox" id="cl-tg">
+            <span class="msg-icon">✈️</span> Telegram
+          </label>
+          <label class="msg-check" id="cl-wa-label" onclick="toggleMsg(this,'on-wa')">
+            <input type="checkbox" id="cl-wa">
+            <span class="msg-icon">💬</span> WhatsApp
+          </label>
+        </div>
+      </div>
+      <div class="client-field">
+        <label>E-mail</label>
+        <input type="email" id="cl-email" placeholder="client@example.com">
+      </div>
+      <div class="client-field">
+        <label>Адрес объекта</label>
+        <div style="position:relative;">
+          <input type="text" id="cl-address" placeholder="г. Шерегеш, ул. ..."
+            autocomplete="off"
+            oninput="onAddressInput()"
+            onblur="setTimeout(hideAddressSugg,200)">
+          <div id="addr-suggestions" style="
+            display:none;position:absolute;left:0;right:0;top:100%;z-index:500;
+            background:#fff;border:1px solid var(--border2);border-top:none;
+            border-radius:0 0 4px 4px;box-shadow:0 4px 12px rgba(0,0,0,.12);
+            max-height:180px;overflow-y:auto;font-family:var(--mono);font-size:11px;">
+          </div>
+        </div>
+        <div id="addr-status" style="font-size:10px;margin-top:4px;font-family:var(--mono);color:var(--text3);min-height:14px;"></div>
+        <div id="addr-map-wrap" style="display:none;margin-top:6px;border-radius:4px;overflow:hidden;border:1px solid var(--border2);">
+          <iframe id="addr-map" width="100%" height="180" frameborder="0" style="display:block;"></iframe>
+        </div>
+      </div>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-title">Стройплощадка</div>
+      <div class="site-grid">
+        <div class="site-field"><label>Длина, м</label><input type="number" id="site-w" value="30" min="5" max="300" step="1"></div>
+        <div class="site-field"><label>Ширина, м</label><input type="number" id="site-h" value="30" min="5" max="300" step="1"></div>
+        <div class="site-field"><label>Масштаб px/м</label><input type="number" id="site-scale" value="30" min="8" max="100" step="2"></div>
+        <div class="site-field"><label>Сетка, м</label><input type="number" id="site-grid" value="0.2" min="0.1" max="5" step="0.1"></div>
+      </div>
+      <button class="apply-btn" onclick="applySite()">Применить</button>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-title">Типоразмер модуля</div>
+      <div class="module-palette" id="palette"></div>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-title">Инструменты</div>
+      <div class="tools-row">
+        <div class="tool-btn active" id="tool-place" onclick="setTool('place')"><span class="tb-icon">➕</span>Разм.</div>
+        <div class="tool-btn" id="tool-select" onclick="setTool('select')"><span class="tb-icon">↖</span>Выбор</div>
+        <div class="tool-btn" id="tool-erase" onclick="setTool('erase')"><span class="tb-icon">🗑</span>Удал.</div>
+        <div class="tool-btn" id="tool-pan" onclick="setTool('pan')"><span class="tb-icon">✋</span>Двигать</div>
+      </div>
+      <div class="tools-row" style="margin-top:5px;">
+        <div class="tool-btn" onclick="rotateSelected()"><span class="tb-icon">↻</span>Повернуть</div>
+        <div class="tool-btn" onclick="clearAll()"><span class="tb-icon">✕</span>Очистить</div>
+      </div>
+      <div class="snap-info" id="snap-info">Привязка к сетке: ВКЛ · [G]</div>
+    </div>
+
+    <div class="sb-section" style="flex:1;">
+      <div class="sb-title">Размещённые модули</div>
+      <div class="mod-list" id="mod-list"></div>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-title">Геометрия здания</div>
+      <div class="res-block">
+        <div class="res-row acc-red">
+          <span class="res-label">Общая площадь</span>
+          <span class="res-val"><span id="r-area">0.0</span> <span class="res-unit">м²</span></span>
+        </div>
+        <div class="res-row acc-amber">
+          <span class="res-label">Периметр</span>
+          <span class="res-val"><span id="r-perim">0.0</span> <span class="res-unit">м</span></span>
+        </div>
+        <div class="res-row acc-green">
+          <span class="res-label">Сэндвич-панель</span>
+          <span class="res-val"><span id="r-panel">0.0</span> <span class="res-unit">м²</span></span>
+        </div>
+        <div class="res-row acc-blue">
+          <span class="res-label">Масса конструкции</span>
+          <span class="res-val"><span id="r-mass">0</span> <span class="res-unit">кг</span></span>
+        </div>
+        <div class="res-row">
+          <span class="res-label">Модулей</span>
+          <span class="res-val"><span id="r-count">0</span> <span class="res-unit">шт</span></span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══ CANVAS ═══ -->
+  <div class="canvas-wrap" id="canvas-wrap">
+    <canvas id="main-canvas"></canvas>
+  </div>
+
+  <!-- ═══ RIGHT: COST CALCULATOR ═══ -->
+  <div class="right-panel">
+
+    <div class="rp-header">
+      <div class="rp-header-icon">💰</div>
+      <div class="rp-header-title">Калькулятор стоимости</div>
+    </div>
+
+    <div class="rp-section">
+      <div class="rp-title">Параметры здания</div>
+      <div class="rp-field">
+        <label class="rp-label">Назначение</label>
+        <select class="rp-select" id="cp-purpose" onchange="onPurposeChange()">
+          <option value="office">Административно-бытовой</option>
+          <option value="living">Жилое / общежитие</option>
+          <option value="medical">Медицинский / ФАП</option>
+          <option value="industrial">Производственный</option>
+          <option value="guard">Пост охраны / КПП</option>
+          <option value="canteen">Столовая</option>
+        </select>
+      </div>
+      <div class="rp-field">
+        <label class="rp-label">Тип системы</label>
+        <select class="rp-select" id="cp-sysType" onchange="onSysTypeChange()">
+          <option value="MBK">MB-K — раздельные рамы (до 3 эт.)</option>
+          <option value="MBN">MB-N — общая рама (до 4 эт.)</option>
+        </select>
+      </div>
+      <div class="rp-field">
+        <label class="rp-label">Этажность</label>
+        <div class="range-row">
+          <input type="range" id="cp-floors" min="1" max="3" value="1" step="1"
+            oninput="
+              document.getElementById('cp-floors-val').textContent=this.value;
+              if(+this.value > 1 && document.getElementById('cp-sysType').value==='MBK'){
+                document.getElementById('cp-sysType').value='MBN';
+                document.getElementById('cp-floors').max=4;
+              }
+              buildPalette();
+              updateResults();
+            ">
+          <span class="range-val" id="cp-floors-val">1</span>
+        </div>
+      </div>
+      <div class="rp-field">
+        <label class="rp-label">Внутренняя высота этажа</label>
+        <select class="rp-select" id="cp-floorh" onchange="updateResults()">
+          <option value="2.5">2.50 м</option>
+          <option value="2.7" selected>2.70 м — стандарт DoorHan</option>
+          <option value="2.8">2.80 м</option>
+          <option value="3.0">3.00 м</option>
+          <option value="3.3">3.30 м — увеличенная</option>
+          <option value="3.6">3.60 м — промышленная</option>
+          <option value="4.0">4.00 м — производственная</option>
+        </select>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:4px;">
+          Наружная = внутр. + 0.23 м (перекрытие)
+        </div>
+      </div>
+      <div class="rp-field">
+        <label class="rp-label">Климатический район</label>
+        <select class="rp-select" id="cp-climate">
+          <option value="1" selected>I — суровый (Сибирь, Север)</option>
+          <option value="2">II — умеренный (центр РФ)</option>
+          <option value="3">III — мягкий (юг РФ)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="rp-section">
+      <div class="rp-title">Комплектация</div>
+      <div class="rp-field">
+        <label class="rp-label">Утеплитель стен</label>
+        <select class="rp-select" id="cp-insul">
+          <option value="100">100 мм — базовая</option>
+          <option value="150" selected>150 мм — стандарт</option>
+          <option value="200">200 мм — усиленная</option>
+        </select>
+      </div>
+      <div class="rp-field">
+        <label class="rp-label">Базовая цена м²</label>
+        <div style="position:relative;">
+          <input class="rp-input" type="number" id="cp-price" value="60000" min="10000" max="200000" style="padding-right:24px;">
+          <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:11px;color:var(--text3);">₽</span>
+        </div>
+      </div>
+      <div class="rp-field">
+        <label class="rp-label">Дополнительные опции</label>
+        <div class="opts-grid" id="cp-opts">
+          <label class="opt-check" onclick="toggleOpt(this)"><input type="checkbox" id="co-door" checked> Двери</label>
+          <label class="opt-check checked" onclick="toggleOpt(this)"><input type="checkbox" id="co-window" checked> Окна ПВХ</label>
+          <label class="opt-check" onclick="toggleOpt(this)"><input type="checkbox" id="co-elec"> Электрика</label>
+          <label class="opt-check" onclick="toggleOpt(this)"><input type="checkbox" id="co-plumb"> Сантехника</label>
+          <label class="opt-check" onclick="toggleOpt(this)"><input type="checkbox" id="co-heat"> Отопление</label>
+          <label class="opt-check" onclick="toggleOpt(this)"><input type="checkbox" id="co-roof"> Доп. кровля</label>
+          <label class="opt-check" onclick="toggleOpt(this)"><input type="checkbox" id="co-stair"> Лестница</label>
+          <label class="opt-check" onclick="toggleOpt(this)"><input type="checkbox" id="co-ramp"> Пандус</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Коридор — убран из расчёта -->
+    <div class="rp-section" id="cp-corridor-section" style="display:none!important;">
+      <div class="rp-title">Центральный коридор</div>
+      <div class="rp-field" style="display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:12px;color:var(--text2);">Использовать коридор</span>
+        <label style="position:relative;width:36px;height:20px;display:inline-block;">
+          <input type="checkbox" id="co-corridor" onchange="onCorridorToggle()" style="opacity:0;width:0;height:0;">
+          <span id="co-corr-slider" style="position:absolute;cursor:pointer;inset:0;background:var(--border);border-radius:20px;transition:.2s;">
+            <span style="position:absolute;content:'';width:14px;height:14px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s;display:block;" id="co-corr-knob"></span>
+          </span>
+        </label>
+      </div>
+      <div id="corr-settings" style="display:none;margin-top:8px;">
+        <div class="rp-field">
+          <label class="rp-label">Тип</label>
+          <select class="rp-select" id="co-corr-type">
+            <option value="center">Двусторонний (комнаты с двух сторон)</option>
+            <option value="side">Односторонний</option>
+          </select>
+        </div>
+        <div class="rp-field">
+          <label class="rp-label">Ширина коридора, м</label>
+          <div class="range-row">
+            <input type="range" id="co-corr-w" min="1.2" max="2.4" value="1.5" step="0.1"
+              oninput="document.getElementById('co-corr-w-val').textContent=parseFloat(this.value).toFixed(1)">
+            <span class="range-val" id="co-corr-w-val">1.5</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rp-section">
+      <button class="calc-btn" onclick="calcCost()">▶ Рассчитать стоимость</button>
+    </div>
+
+    <!-- RESULTS -->
+    <div id="cost-results" style="display:none;">
+      <div class="cost-summary">
+
+        <div class="cost-big">
+          <div class="cost-big-val" id="cr-total">—</div>
+          <div class="cost-big-sub">Итоговая стоимость здания</div>
+        </div>
+
+        <div class="cost-rows">
+          <div class="cost-row">
+            <span class="cost-row-label">Конструкции (база)</span>
+            <span class="cost-row-val" id="cr-base">—</span>
+          </div>
+          <div class="cost-row">
+            <span class="cost-row-label">Сэндвич-панели</span>
+            <span class="cost-row-val" id="cr-sandwich">—</span>
+          </div>
+          <div class="cost-row" id="cr-corridor-row" style="display:none;">
+            <span class="cost-row-label">Отделка коридора</span>
+            <span class="cost-row-val" id="cr-corridor">—</span>
+          </div>
+          <div class="cost-row">
+            <span class="cost-row-label">Доп. комплектация</span>
+            <span class="cost-row-val" id="cr-extras">—</span>
+          </div>
+          <!-- детализация опций -->
+          <div id="cr-extras-detail" style="display:flex;flex-direction:column;gap:4px;margin-top:2px;"></div>
+          <div class="cost-row total">
+            <span class="cost-row-label">Итого</span>
+            <span class="cost-row-val" id="cr-total2">—</span>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Ключевые показатели -->
+        <div class="rp-title" style="margin-bottom:8px;">Показатели здания</div>
+        <div class="cost-rows">
+          <div class="cost-row">
+            <span class="cost-row-label">Полная площадь помещений</span>
+            <span class="cost-row-val"><span id="cr-fullarea-r">—</span> <span class="res-unit">м²</span></span>
+          </div>
+          <div class="cost-row">
+            <span class="cost-row-label">Строительный объём</span>
+            <span class="cost-row-val"><span id="cr-volume-r">—</span> <span class="res-unit">м³</span></span>
+          </div>
+          <div class="cost-row">
+            <span class="cost-row-label">Высота этажа</span>
+            <span class="cost-row-val"><span id="cr-floorh-r">—</span> <span class="res-unit">м</span></span>
+          </div>
+          <div class="cost-row">
+            <span class="cost-row-label">Пл. сэндвич-панелей</span>
+            <span class="cost-row-val"><span id="cr-sandwich-area-r">—</span> <span class="res-unit">м²</span></span>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Нагрузки -->
+        <div class="rp-title" style="margin-bottom:8px;">Нагрузки и конструктив</div>
+        <div class="cost-rows">
+          <div class="cost-row">
+            <span class="cost-row-label">Снеговая нагрузка</span>
+            <span class="cost-row-val"><span id="cr-snow">—</span> <span class="res-unit">кПа</span></span>
+          </div>
+          <div class="cost-row">
+            <span class="cost-row-label">Ветровая нагрузка</span>
+            <span class="cost-row-val"><span id="cr-wind">—</span> <span class="res-unit">кПа</span></span>
+          </div>
+          <div class="cost-row">
+            <span class="cost-row-label">Полезная нагрузка</span>
+            <span class="cost-row-val"><span id="cr-live">—</span> <span class="res-unit">кг/м²</span></span>
+          </div>
+          <div class="cost-row">
+            <span class="cost-row-label">Нагрузка на фундамент</span>
+            <span class="cost-row-val"><span id="cr-found">—</span> <span class="res-unit">т</span></span>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Удельная стоимость -->
+        <div class="cost-rows">
+          <div class="cost-row">
+            <span class="cost-row-label">₽ / м² общей пл.</span>
+            <span class="cost-row-val" id="cr-per-m2">—</span>
+          </div>
+          <div class="cost-row" id="cr-useful-row" style="display:none;">
+            <span class="cost-row-label">Полезная площадь</span>
+            <span class="cost-row-val"><span id="cr-useful">—</span> <span class="res-unit">м²</span></span>
+          </div>
+          <div class="cost-row" id="cr-per-useful-row" style="display:none;">
+            <span class="cost-row-label">₽ / м² полезной пл.</span>
+            <span class="cost-row-val" id="cr-per-useful">—</span>
+          </div>
+        </div>
+
+        <div class="notice notice-warn">⚠ Нагрузки предварительные. Расчёт по СП 20.13330 — задача сертифицированного специалиста.</div>
+        <div class="notice notice-info" style="margin-top:6px;">ℹ Монтаж, транспорт и фундамент не включены. Уточняйте у официальных дилеров.</div>
+
+        <div class="divider"></div>
+
+        <!-- Данные для КП — клиент заполняется в левой панели -->
+        <div class="rp-title" style="margin-bottom:8px;">Данные для документов</div>
+        <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:10px;padding:6px 8px;background:var(--bg);border-radius:4px;border-left:2px solid var(--border2);">
+          Клиент, телефон, адрес — заполните в левой панели
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;">
+          <div>
+            <label class="rp-label">Менеджер</label>
+            <input class="rp-input" type="text" id="kp-manager" placeholder="Иванов И.И." value="Дарья Романова">
+          </div>
+        </div>
+
+        <button class="calc-btn" style="background:#1A5C30;" onclick="generateKP()">
+          📄 Коммерческое предложение (PDF)
+        </button>
+        <button class="calc-btn" style="background:#229ED9;margin-top:8px;" onclick="showTgDialog()">
+          ✈️ Отправить КП в Telegram
+        </button>
+        <button class="calc-btn" style="background:#0A3D8F;margin-top:8px;" onclick="generateRequest()">
+          📋 Заявка на конструкции DoorHan
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ TELEGRAM MODAL ═══ -->
+<div id="tg-modal" style="
+  display:none;position:fixed;inset:0;z-index:2000;
+  background:rgba(0,0,0,0.55);align-items:center;justify-content:center;">
+  <div style="
+    background:#fff;border-radius:10px;padding:24px;width:360px;max-width:95vw;
+    box-shadow:0 8px 32px rgba(0,0,0,0.2);font-family:var(--sans);">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+      <span style="font-size:28px;">✈️</span>
+      <div>
+        <div style="font-size:15px;font-weight:700;color:var(--text);">Отправить КП в Telegram</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px;">Выберите способ отправки</div>
+      </div>
+    </div>
+
+    <!-- Способ 1: поделиться через t.me/share -->
+    <div style="background:#E8F5FD;border:1.5px solid #229ED9;border-radius:6px;padding:12px 14px;margin-bottom:10px;">
+      <div style="font-size:12px;font-weight:600;color:#005F8A;margin-bottom:6px;">📤 Поделиться ссылкой на КП</div>
+      <div style="font-size:11px;color:#444;margin-bottom:8px;line-height:1.5;">
+        Откроет Telegram с предложением поделиться — выберите нужный контакт или группу.
+      </div>
+      <button onclick="sendTgShare()" style="
+        width:100%;padding:9px;background:#229ED9;color:#fff;border:none;
+        border-radius:5px;font-family:var(--mono);font-size:12px;font-weight:600;
+        cursor:pointer;letter-spacing:.04em;">
+        ✈️ Открыть Telegram
+      </button>
+    </div>
+
+    <!-- Способ 2: отправить через бот -->
+    <div style="background:#F5F5F5;border:1.5px solid var(--border);border-radius:6px;padding:12px 14px;margin-bottom:10px;">
+      <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px;">🤖 Отправить через бот (прямо клиенту)</div>
+      <div style="font-size:11px;color:#444;margin-bottom:8px;line-height:1.5;">
+        Укажите Telegram клиента — бот пришлёт КП напрямую.
+      </div>
+      <div style="margin-bottom:8px;">
+        <label style="font-size:10px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:3px;">Username или номер (+79...)</label>
+        <input id="tg-recipient" type="text" placeholder="@username или +79231234567"
+          value="@yakushevskya"
+          style="width:100%;padding:7px 9px;border:1px solid var(--border2);border-radius:4px;
+          font-family:var(--mono);font-size:12px;outline:none;">
+      </div>
+      <div style="margin-bottom:8px;">
+        <label style="font-size:10px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:3px;">Токен бота (из @BotFather)</label>
+        <input id="tg-token" type="text" placeholder="123456789:AAF..."
+          value="8958884898:AAG3JQREWDFvkGo0zc4EMwIEKYzxmqKeFGU"
+          style="width:100%;padding:7px 9px;border:1px solid var(--border2);border-radius:4px;
+          font-family:var(--mono);font-size:12px;outline:none;">
+      </div>
+      <div id="tg-bot-status" style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:6px;min-height:14px;"></div>
+      <button onclick="sendTgBot()" style="
+        width:100%;padding:9px;background:#2B5278;color:#fff;border:none;
+        border-radius:5px;font-family:var(--mono);font-size:12px;font-weight:600;
+        cursor:pointer;letter-spacing:.04em;">
+        📨 Отправить через бот
+      </button>
+    </div>
+
+    <div style="font-size:10px;color:var(--text3);font-family:var(--mono);line-height:1.6;margin-bottom:14px;">
+      ℹ Токен бота можно получить у @BotFather в Telegram. Клиент должен сначала написать боту /start.
+    </div>
+
+    <button onclick="hideTgDialog()" style="
+      width:100%;padding:8px;background:var(--bg2);color:var(--text2);border:1px solid var(--border);
+      border-radius:5px;font-family:var(--mono);font-size:11px;cursor:pointer;">
+      Закрыть
+    </button>
+  </div>
+</div>
+
+<div class="bottom-bar">
+  <div class="bb-item">Курсор: <span id="bb-pos">—</span></div>
+  <div class="bb-sep"></div>
+  <div class="bb-item">Сетка: <span id="bb-grid">1.0 м</span></div>
+  <div class="bb-sep"></div>
+  <div class="bb-item">[R] повернуть &nbsp;[Del] удалить &nbsp;[G] сетка &nbsp;[Пробел] двигать &nbsp;[Esc] размещение &nbsp;Alt+drag / колесо = зум &nbsp;ПКМ = меню</div>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+<div class="ctx-menu" id="ctx-menu">
+  <div class="ctx-item" onclick="ctxRotate()">↻ &nbsp;Повернуть 90°</div>
+  <div class="ctx-item" onclick="ctxDuplicate()">⎘ &nbsp;Дублировать</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item danger" onclick="ctxDelete()">✕ &nbsp;Удалить</div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// MODULE TYPES
+// ══════════════════════════════════════════════
+const MODULE_TYPES = [
+  { id:'6x3',    name:'МБ 6×3.0',  l:6.0,  w:3.0,  bodyColor:'#D6EAF8', strokeColor:'#1565C0', labelColor:'#0D47A1', massUnit:2800 },
+  { id:'6x24',   name:'МБ 6×2.4',  l:6.0,  w:2.4,  bodyColor:'#FEF9E7', strokeColor:'#D4AC0D', labelColor:'#9A7D0A', massUnit:2400 },
+  { id:'3x3',    name:'МБ 3×3.0',  l:3.0,  w:3.0,  bodyColor:'#F4ECF7', strokeColor:'#7D3C98', labelColor:'#6C3483', massUnit:1500 },
+  { id:'3x24',   name:'МБ 3×2.4',  l:3.0,  w:2.4,  bodyColor:'#E8F8F0', strokeColor:'#0E8B6B', labelColor:'#0B6B52', massUnit:1200 },
+  // Внутренние лестничные модули — только для MB-N, 2+ этажа
+  { id:'stair-6x3',  name:'МБ Лестн. 6×3.0', l:6.0, w:3.0, bodyColor:'#FFF0D6', strokeColor:'#B85C00', labelColor:'#7A3D00', massUnit:3400, stair:true },
+  { id:'stair-6x24', name:'МБ Лестн. 6×2.4',  l:6.0, w:2.4, bodyColor:'#FFF0D6', strokeColor:'#B85C00', labelColor:'#7A3D00', massUnit:2900, stair:true },
+  // Наружные лестницы DoorHan — стальные, дополнительная комплектация, оба типа систем, 2+ этажа
+  // Наружные лестницы DoorHan с промежуточными площадками — стальная конструкция
+  // Ширина 1.2 м; марш ~3.0 м + площадка 1.5 м на каждый пролёт
+  // 2 эт.: 1 марш (3.0) + 1 площадка (1.5) = 4.5 м
+  // 3 эт.: 2 марша (6.0) + 2 площадки (3.0) = 7.5 м (с разворотом можно компактнее — 1.2×4.5 + 2.4 ширина, здесь прямая проекция)
+  // 4 эт.: 3 марша + 3 площадки = 10.5 м
+  { id:'ext-stair-1', name:'Лестн. с площадкой 2 эт.', l:4.5,  w:1.2, bodyColor:'#E8F8E8', strokeColor:'#1A6B3C', labelColor:'#0D4D28', massUnit:580,  extStair:true, stairFloors:2, priceFixed:185000 },
+  { id:'ext-stair-2', name:'Лестн. с площадкой 3 эт.', l:7.5,  w:1.2, bodyColor:'#E8F8E8', strokeColor:'#1A6B3C', labelColor:'#0D4D28', massUnit:980,  extStair:true, stairFloors:3, priceFixed:310000 },
+  { id:'ext-stair-3', name:'Лестн. с площадкой 4 эт.', l:10.5, w:1.2, bodyColor:'#E8F8E8', strokeColor:'#1A6B3C', labelColor:'#0D4D28', massUnit:1380, extStair:true, stairFloors:4, priceFixed:435000 },
+];
+
+const FLOOR_H = 3.33;
+
+// ══════════════════════════════════════════════
+// CANVAS STATE
+// ══════════════════════════════════════════════
+let canvas, ctx;
+let site = { w:30, h:20 };
+let scale = 30, gridStep = 1.0, snapToGrid = true;
+let tool = 'place', selectedTypeId = '6x3';
+let modules = [], selectedId = null, nextId = 1;
+let pan = { x:60, y:40 };
+let panning = false, panStart = {};
+let dragging = false, dragStart = {}, dragOrigPos = null;
+let ghostPos = null;
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  canvas = document.getElementById('main-canvas');
+  ctx = canvas.getContext('2d');
+  buildPalette();
+  applySite();
+  window.addEventListener('resize', () => { resizeCanvas(); render(); });
+  canvas.addEventListener('mousedown',   onMouseDown);
+  canvas.addEventListener('mousemove',   onMouseMove);
+  canvas.addEventListener('mouseup',     onMouseUp);
+  canvas.addEventListener('mouseleave',  () => { ghostPos=null; hideTooltip(); render(); });
+  canvas.addEventListener('wheel',       onWheel, { passive:false });
+  canvas.addEventListener('contextmenu', onContextMenu);
+  document.addEventListener('keydown',   onKeyDown);
+  document.addEventListener('click',     () => hideCtxMenu());
+  // init opt-check states
+  document.querySelectorAll('.opt-check input').forEach(i =>
+    i.parentElement.classList.toggle('checked', i.checked));
+});
+
+function resizeCanvas() {
+  const w = document.getElementById('canvas-wrap');
+  canvas.width = w.clientWidth;
+  canvas.height = w.clientHeight;
+}
+
+// ══════════════════════════════════════════════
+// PALETTE
+// ══════════════════════════════════════════════
+function buildPalette() {
+  const el = document.getElementById('palette');
+  el.innerHTML = '';
+  const floors  = +document.getElementById('cp-floors').value || 1;
+  const sysType = document.getElementById('cp-sysType').value;
+  const showStair    = sysType === 'MBN' && floors > 1;
+  const showExtStair = floors > 1;
+
+  MODULE_TYPES.filter(mt => !mt.stair && !mt.extStair).forEach(mt => addPaletteItem(el, mt));
+
+  if(showStair) {
+    const sep = document.createElement('div');
+    sep.style.cssText = 'font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--amber);padding:8px 2px 4px;border-top:1px dashed var(--border);margin-top:4px;';
+    sep.textContent = '▶ Внутренние лестничные модули (MB-N)';
+    el.appendChild(sep);
+    MODULE_TYPES.filter(mt => mt.stair).forEach(mt => addPaletteItem(el, mt));
+  } else if(selectedTypeId.startsWith('stair-')) {
+    selectedTypeId = '6x3';
+  }
+
+  if(showExtStair) {
+    const sep2 = document.createElement('div');
+    sep2.style.cssText = 'font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:#1A6B3C;padding:8px 2px 4px;border-top:1px dashed var(--border);margin-top:4px;';
+    sep2.textContent = '▶ Наружные лестницы DoorHan';
+    el.appendChild(sep2);
+    // Показываем только подходящий типоразмер по этажности
+    MODULE_TYPES.filter(mt => mt.extStair).forEach(mt => {
+      const div = addPaletteItem(el, mt, floors);
+      return div;
+    });
+  } else if(selectedTypeId.startsWith('ext-stair-')) {
+    selectedTypeId = '6x3';
+  }
+}
+
+function addPaletteItem(el, mt, floors) {
+  const S=6, pw=Math.round(mt.l*S), ph=Math.round(Math.max(mt.w,1.2)*S);
+  const div = document.createElement('div');
+  div.className = 'mod-item' + (mt.id===selectedTypeId?' selected':'');
+  div.dataset.id = mt.id;
+
+  let extra = '';
+  if(mt.stair)    extra = `<div style="font-size:9px;color:var(--amber);margin-top:1px;">Внутренний · +40% к цене</div>`;
+  if(mt.extStair) extra = `<div style="font-size:9px;color:#1A6B3C;margin-top:1px;">Наружная · фиксированная цена</div>
+                            <div style="font-size:10px;color:#1A6B3C;font-weight:600;margin-top:1px;">${fmt(mt.priceFixed)} ₽</div>`;
+
+  div.innerHTML = `
+    <canvas class="mod-preview" width="${pw}" height="${ph}" style="width:${pw}px;height:${ph}px;flex-shrink:0;"></canvas>
+    <div class="mod-info">
+      <div class="mod-name">${mt.name}</div>
+      <div class="mod-dims">${mt.l} × ${mt.w} м · ${mt.massUnit} кг</div>
+      ${extra}
+    </div>`;
+  div.addEventListener('click', () => selectType(mt.id));
+  el.appendChild(div);
+
+  const pc = div.querySelector('.mod-preview').getContext('2d');
+  pc.fillStyle = mt.bodyColor; pc.fillRect(0,0,pw,ph);
+  pc.strokeStyle = mt.strokeColor; pc.lineWidth=1.5;
+  pc.strokeRect(.75,.75,pw-1.5,ph-1.5);
+
+  if(mt.stair) {
+    drawStairSymbol(pc, pw, ph, mt.strokeColor);
+  } else if(mt.extStair) {
+    drawExtStairSymbol(pc, pw, ph, mt.strokeColor, mt.stairFloors||2);
+  } else {
+    pc.strokeStyle = mt.strokeColor+'44'; pc.lineWidth=.5;
+    pc.beginPath(); pc.moveTo(pw/2,0); pc.lineTo(pw/2,ph); pc.stroke();
+    pc.beginPath(); pc.moveTo(0,ph/2); pc.lineTo(pw,ph/2); pc.stroke();
+  }
+  return div;
+}
+
+// Символ наружной лестницы с площадками:
+// Чередуем: марш (ступени) → площадка (штриховка) → марш → ...
+function drawExtStairSymbol(pc, pw, ph, color, numFloors) {
+  const numMarches   = numFloors - 1; // маршей на 1 меньше этажей
+  const marchLen     = 3.0;           // м
+  const landingLen   = 1.5;           // м
+  const totalLen     = numMarches * marchLen + numMarches * landingLen;
+  const pxPerM       = pw / totalLen;
+
+  pc.strokeStyle = color; pc.lineWidth = 1;
+
+  let curX = 0;
+  for(let i = 0; i < numMarches; i++) {
+    const mw = marchLen * pxPerM;
+    const lw = landingLen * pxPerM;
+
+    // Марш — ступени
+    const steps = 6;
+    const sw = mw / steps;
+    const sh = ph / steps;
+    for(let s = 0; s < steps; s++) {
+      const sx = curX + s * sw;
+      const sy = ph - (s + 1) * sh;
+      pc.beginPath(); pc.moveTo(sx, sy + sh); pc.lineTo(sx + sw, sy + sh); pc.stroke();
+      if(s < steps - 1) { pc.beginPath(); pc.moveTo(sx + sw, sy + sh); pc.lineTo(sx + sw, sy); pc.stroke(); }
+    }
+
+    // Граница марша
+    pc.strokeStyle = color + '99'; pc.lineWidth = 0.5;
+    pc.strokeRect(curX + 0.5, 0.5, mw - 1, ph - 1);
+    curX += mw;
+
+    // Площадка — диагональная штриховка
+    pc.strokeStyle = color; pc.lineWidth = 0.7;
+    pc.save();
+    pc.beginPath(); pc.rect(curX, 0, lw, ph); pc.clip();
+    const hStep = 5;
+    for(let hx = -ph; hx < lw + ph; hx += hStep) {
+      pc.beginPath(); pc.moveTo(curX + hx, 0); pc.lineTo(curX + hx + ph, ph); pc.stroke();
+    }
+    pc.restore();
+    // Граница площадки
+    pc.strokeStyle = color; pc.lineWidth = 1.2;
+    pc.strokeRect(curX + 0.5, 0.5, lw - 1, ph - 1);
+    // Подпись "П" (площадка)
+    if(lw > 10) {
+      pc.fillStyle = color; pc.font = `bold ${Math.min(9, ph * 0.35)}px sans-serif`;
+      pc.textAlign = 'center'; pc.textBaseline = 'middle';
+      pc.fillText('П', curX + lw / 2, ph / 2);
+    }
+    curX += lw;
+  }
+
+  // Стрелка подъёма поверх всего
+  pc.strokeStyle = color; pc.lineWidth = 1.5;
+  const ay1 = ph * 0.85, ay2 = ph * 0.15;
+  pc.beginPath(); pc.moveTo(pw * 0.06, ay1); pc.lineTo(pw * 0.94, ay2); pc.stroke();
+  const ang = Math.atan2(ay2 - ay1, pw * 0.88);
+  const al = 5;
+  pc.beginPath();
+  pc.moveTo(pw * 0.94, ay2);
+  pc.lineTo(pw * 0.94 - al * Math.cos(ang - 0.4), ay2 - al * Math.sin(ang - 0.4));
+  pc.moveTo(pw * 0.94, ay2);
+  pc.lineTo(pw * 0.94 - al * Math.cos(ang + 0.4), ay2 - al * Math.sin(ang + 0.4));
+  pc.stroke();
+}
+
+// Символ лестницы для превью и плана (ступени + стрелка)
+function drawStairSymbol(pc, pw, ph, color, scale_) {
+  const steps = 5;
+  const sw = pw / steps, sh = ph / steps;
+  pc.strokeStyle = color; pc.lineWidth = Math.max(.7, (scale_||1) * .8);
+  for(let i = 0; i < steps; i++) {
+    const x = i * sw, y = ph - (i+1)*sh;
+    pc.beginPath(); pc.moveTo(x, y+sh); pc.lineTo(x+sw, y+sh); pc.stroke(); // горизонт
+    pc.beginPath(); pc.moveTo(x+sw, y+sh); pc.lineTo(x+sw, y); pc.stroke(); // вертикаль
+  }
+  // Стрелка по диагонали (направление подъёма)
+  const ax1=pw*.15, ay1=ph*.85, ax2=pw*.82, ay2=ph*.1;
+  pc.lineWidth = Math.max(1, (scale_||1));
+  pc.beginPath(); pc.moveTo(ax1,ay1); pc.lineTo(ax2,ay2); pc.stroke();
+  const ang = Math.atan2(ay2-ay1, ax2-ax1);
+  const al = 5;
+  pc.beginPath();
+  pc.moveTo(ax2,ay2);
+  pc.lineTo(ax2-al*Math.cos(ang-0.4), ay2-al*Math.sin(ang-0.4));
+  pc.moveTo(ax2,ay2);
+  pc.lineTo(ax2-al*Math.cos(ang+0.4), ay2-al*Math.sin(ang+0.4));
+  pc.stroke();
+}
+
+function selectType(id) {
+  selectedTypeId = id;
+  document.querySelectorAll('.mod-item').forEach(e => e.classList.toggle('selected', e.dataset.id===id));
+  if(tool!=='place') setTool('place');
+}
+
+// ══════════════════════════════════════════════
+// SITE
+// ══════════════════════════════════════════════
+function applySite() {
+  site.w   = +document.getElementById('site-w').value    || 30;
+  site.h   = +document.getElementById('site-h').value    || 20;
+  scale    = +document.getElementById('site-scale').value || 30;
+  gridStep = +document.getElementById('site-grid').value  || 1;
+  document.getElementById('bb-grid').textContent = gridStep.toFixed(1)+' м';
+  resizeCanvas();
+  pan.x = (canvas.width  - site.w*scale) / 2;
+  pan.y = (canvas.height - site.h*scale) / 2;
+  render();
+}
+
+// ══════════════════════════════════════════════
+// TOOLS
+// ══════════════════════════════════════════════
+function setTool(t) {
+  tool = t;
+  ['place','select','erase','pan'].forEach(id => {
+    const el = document.getElementById('tool-'+id);
+    if(el) el.classList.toggle('active', id===t);
+  });
+  if(t !== 'place') ghostPos = null;
+  const cursors = { place:'crosshair', select:'default', erase:'cell', pan:'grab' };
+  canvas.style.cursor = cursors[t] || 'crosshair';
+  render();
+}
+
+// ══════════════════════════════════════════════
+// COORDS / HIT / OVERLAP
+// ══════════════════════════════════════════════
+function c2m(cx,cy){ return { x:(cx-pan.x)/scale, y:(cy-pan.y)/scale }; }
+function m2c(mx,my){ return { x:mx*scale+pan.x,   y:my*scale+pan.y   }; }
+function snap(v){ return snapToGrid ? Math.round(v/gridStep)*gridStep : v; }
+function getType(m){ return MODULE_TYPES.find(t=>t.id===m.typeId); }
+function bbox(m){
+  const mt=getType(m);
+  return { x:m.x, y:m.y, l:m.rotated?mt.w:mt.l, w:m.rotated?mt.l:mt.w };
+}
+function hitTest(mx,my){
+  for(let i=modules.length-1;i>=0;i--){
+    const b=bbox(modules[i]);
+    if(mx>=b.x&&mx<=b.x+b.l&&my>=b.y&&my<=b.y+b.w) return modules[i];
+  }
+  return null;
+}
+function overlaps(a,b){
+  if(a.id===b.id) return false;
+  const ba=bbox(a),bb2=bbox(b),E=.001;
+  return ba.x<bb2.x+bb2.l-E && ba.x+ba.l>bb2.x+E && ba.y<bb2.y+bb2.w-E && ba.y+ba.w>bb2.y+E;
+}
+function anyOverlap(m){ return modules.some(o=>overlaps(m,o)); }
+function getMouseM(e){ const r=canvas.getBoundingClientRect(); return c2m(e.clientX-r.left,e.clientY-r.top); }
+
+// ══════════════════════════════════════════════
+// MOUSE
+// ══════════════════════════════════════════════
+function onMouseDown(e){
+  hideCtxMenu();
+  if(e.button===2) return;
+  // Средняя кнопка, Alt+drag или инструмент "Двигать" → панорамирование
+  if(e.button===1 || (e.button===0 && e.altKey) || (e.button===0 && tool==='pan')){
+    panning=true;
+    panStart={mx:e.clientX,my:e.clientY,px:pan.x,py:pan.y};
+    canvas.style.cursor='grabbing';
+    return;
+  }
+  const mp=getMouseM(e);
+  const onSite = mp.x >= 0 && mp.y >= 0 && mp.x <= site.w && mp.y <= site.h;
+
+  if(tool==='erase'){
+    const h=hitTest(mp.x,mp.y); if(h) removeModule(h.id); return;
+  }
+  if(tool==='select'){
+    const h=hitTest(mp.x,mp.y);
+    if(h){ selectMod(h.id); dragging=true; dragStart={mx:e.clientX,my:e.clientY}; dragOrigPos={x:h.x,y:h.y}; }
+    else if(onSite) selectMod(null); // снимаем выделение только при клике ВНУТРИ площадки
+    render(); return;
+  }
+  if(tool==='place'){
+    if(onSite) placeAt(mp.x,mp.y);
+    // клик вне площадки — ничего не делаем, инструмент не меняем
+  }
+}
+function onMouseMove(e){
+  if(panning){ pan.x=panStart.px+(e.clientX-panStart.mx); pan.y=panStart.py+(e.clientY-panStart.my); render(); return; }
+  const mp=getMouseM(e);
+  document.getElementById('bb-pos').textContent=`${mp.x.toFixed(1)}, ${mp.y.toFixed(1)} м`;
+  if(dragging&&selectedId!==null){
+    const m=modules.find(m=>m.id===selectedId);
+    if(m){ m.x=snap(dragOrigPos.x+(e.clientX-dragStart.mx)/scale); m.y=snap(dragOrigPos.y+(e.clientY-dragStart.my)/scale); render(); }
+    return;
+  }
+  if(tool==='place'){
+    const mt=MODULE_TYPES.find(t=>t.id===selectedTypeId);
+    if(mt) ghostPos={x:snap(mp.x-mt.l/2),y:snap(mp.y-mt.w/2)};
+    showTip(e.clientX,e.clientY,`${mt?mt.l:0}×${mt?mt.w:0}м @ (${mp.x.toFixed(1)}, ${mp.y.toFixed(1)})`);
+  } else {
+    const h=hitTest(mp.x,mp.y);
+    if(h){ const b=bbox(h),mt=getType(h); showTip(e.clientX,e.clientY,`${mt.name}${h.rotated?' ↻':''} · ${b.l.toFixed(2)}×${b.w.toFixed(2)} м`); }
+    else hideTooltip();
+  }
+  render();
+}
+function onMouseUp(e){
+  if(panning){ panning=false; canvas.style.cursor = tool==='pan' ? 'grab' : (tool==='place'?'crosshair':tool==='erase'?'cell':'default'); return; }
+  if(dragging){
+    dragging=false;
+    const m=modules.find(m=>m.id===selectedId);
+    if(m&&(!inSite(m)||anyOverlap(m))){ m.x=dragOrigPos.x; m.y=dragOrigPos.y; }
+    dragOrigPos=null; updateResults(); render();
+  }
+}
+function onWheel(e){
+  e.preventDefault();
+  const r=canvas.getBoundingClientRect(),cx=e.clientX-r.left,cy=e.clientY-r.top;
+  const f=e.deltaY<0?1.12:.89, old=scale;
+  scale=Math.max(8,Math.min(120,scale*f));
+  pan.x=cx-(cx-pan.x)*(scale/old); pan.y=cy-(cy-pan.y)*(scale/old);
+  document.getElementById('site-scale').value=Math.round(scale);
+  render();
+}
+function onContextMenu(e){
+  e.preventDefault();
+  const mp=getMouseM(e),h=hitTest(mp.x,mp.y);
+  if(h){ selectMod(h.id); render(); showCtxMenu(e.clientX,e.clientY); }
+}
+function onKeyDown(e){
+  if(['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) return;
+  if(e.key==='r'||e.key==='R') rotateSelected();
+  if(e.key==='g'||e.key==='G') toggleSnap();
+  if(e.key===' ') { e.preventDefault(); setTool('pan'); }
+  if(e.key==='Escape'){ selectMod(null); ghostPos=null; setTool('place'); render(); }
+  if(e.key==='Delete'||e.key==='Backspace') { if(selectedId) removeModule(selectedId); }
+}
+
+// ══════════════════════════════════════════════
+// MODULE OPS
+// ══════════════════════════════════════════════
+function autoRoof(){
+  const roofEl = document.getElementById('co-roof');
+  if(!roofEl) return;
+  const label  = roofEl.parentElement;
+  const checked = modules.length > 1;
+  roofEl.checked = checked;
+  if(label) label.classList.toggle('checked', checked);
+}
+
+// Returns true if module fits entirely within the site boundary
+function inSite(m){
+  const b=bbox(m), EPS=0.001;
+  return b.x >= -EPS && b.y >= -EPS &&
+         b.x+b.l <= site.w+EPS && b.y+b.w <= site.h+EPS;
+}
+
+function placeAt(mx,my){
+  const mt=MODULE_TYPES.find(t=>t.id===selectedTypeId); if(!mt) return;
+  const m={id:nextId++,typeId:selectedTypeId,x:snap(mx-mt.l/2),y:snap(my-mt.w/2),rotated:false};
+  if(inSite(m)&&!anyOverlap(m)){ modules.push(m); selectMod(m.id); autoRoof(); updateResults(); updateList(); render(); }
+}
+function removeModule(id){
+  modules=modules.filter(m=>m.id!==id);
+  if(selectedId===id) selectedId=null;
+  autoRoof(); updateResults(); updateList(); render();
+}
+function selectMod(id){
+  selectedId=id; modules.forEach(m=>m.selected=m.id===id); updateList();
+}
+function rotateSelected(){
+  if(selectedId===null) return;
+  const m=modules.find(m=>m.id===selectedId); if(!m) return;
+  const b0=bbox(m); m.rotated=!m.rotated; const b1=bbox(m);
+  m.x=snap(b0.x+(b0.l-b1.l)/2); m.y=snap(b0.y+(b0.w-b1.w)/2);
+  if(!inSite(m)||anyOverlap(m)){ m.rotated=!m.rotated; m.x=b0.x; m.y=b0.y; }
+  setTool('select');
+  updateResults(); render();
+}
+function clearAll(){
+  if(!modules.length||!confirm('Очистить все модули?')) return;
+  modules=[]; selectedId=null; autoRoof(); updateResults(); updateList(); render();
+}
+function toggleSnap(){
+  snapToGrid=!snapToGrid;
+  document.getElementById('snap-info').textContent=`Привязка: ${snapToGrid?'ВКЛ':'ВЫКЛ'} · [G]`;
+}
+
+// ── CTX MENU
+function ctxRotate(){ hideCtxMenu(); rotateSelected(); }
+function ctxDuplicate(){
+  hideCtxMenu(); if(!selectedId) return;
+  const orig=modules.find(m=>m.id===selectedId); if(!orig) return;
+  const b=bbox(orig);
+  for(const [dx,dy] of [[b.l+.05,0],[0,b.w+.05],[-b.l-.05,0],[0,-b.w-.05]]){
+    const nm={id:nextId++,typeId:orig.typeId,x:snap(orig.x+dx),y:snap(orig.y+dy),rotated:orig.rotated};
+    if(inSite(nm)&&!anyOverlap(nm)){ modules.push(nm); selectMod(nm.id); updateResults(); updateList(); render(); return; }
+  }
+}
+function ctxDelete(){ hideCtxMenu(); if(selectedId) removeModule(selectedId); }
+function showCtxMenu(cx,cy){ const m=document.getElementById('ctx-menu'); m.style.cssText=`display:block;left:${cx}px;top:${cy}px`; }
+function hideCtxMenu(){ document.getElementById('ctx-menu').style.display='none'; }
+
+// ── TOOLTIP
+function showTip(cx,cy,text){ const t=document.getElementById('tooltip'); t.textContent=text; t.style.cssText=`display:block;left:${cx+14}px;top:${cy+14}px`; }
+function hideTooltip(){ document.getElementById('tooltip').style.display='none'; }
+
+// ══════════════════════════════════════════════
+// LIST + GEOMETRY RESULTS
+// ══════════════════════════════════════════════
+function updateList(){
+  const el=document.getElementById('mod-list'); el.innerHTML='';
+  modules.forEach(m=>{
+    const mt=getType(m),b=bbox(m);
+    const div=document.createElement('div');
+    div.className='mod-list-item'+(m.id===selectedId?' highlighted':'');
+    div.innerHTML=`<span>${mt.name}${m.rotated?' ↻':''} &nbsp;${b.l.toFixed(1)}×${b.w.toFixed(1)}</span><span class="mli-del" data-id="${m.id}">✕</span>`;
+    div.addEventListener('click',e=>{
+      if(e.target.classList.contains('mli-del')) removeModule(+e.target.dataset.id);
+      else { selectMod(m.id); render(); }
+    });
+    el.appendChild(div);
+  });
+}
+
+function computePerimeter(){
+  return computePerimeterFor(modules);
+}
+
+function computePerimeterFor(mods){
+  if(!mods.length) return 0;
+  const R=.1, occ=new Set();
+  mods.filter(m=>!getType(m).extStair).forEach(m=>{
+    const b=bbox(m),x0=Math.round(b.x/R),y0=Math.round(b.y/R),lc=Math.round(b.l/R),wc=Math.round(b.w/R);
+    for(let ix=0;ix<lc;ix++) for(let iy=0;iy<wc;iy++) occ.add(`${x0+ix},${y0+iy}`);
+  });
+  let p=0;
+  occ.forEach(k=>{ const [x,y]=k.split(',').map(Number); [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>{ if(!occ.has(`${x+dx},${y+dy}`)) p++; }); });
+  return p*R;
+}
+
+function totalMass(){
+  return modules.reduce((s,m)=>{ const mt=getType(m); return s+mt.massUnit; },0);
+}
+
+function updateResults(){
+  const bldMods = modules.filter(m => !getType(m).extStair);
+  const count   = bldMods.length;
+  const area1   = bldMods.reduce((s,m)=>{ const b=bbox(m); return s+b.l*b.w; },0);
+  const perim   = computePerimeter();
+  const floors  = +document.getElementById('cp-floors').value||1;
+  const innerH  = +document.getElementById('cp-floorh').value||2.70;
+  const outerH  = innerH+0.23;
+  const sysType = document.getElementById('cp-sysType').value;
+  const totalModules = sysType==='MBK' ? count*floors : count;
+  const panel    = perim*outerH*floors;
+  const fullArea = area1*floors;
+  const volume   = area1*outerH*floors;
+  const mass     = bldMods.reduce((s,m)=>s+getType(m).massUnit,0)*floors;
+  document.getElementById('r-count').textContent=
+    sysType==='MBK' && floors>1 ? `${totalModules} (${count}×${floors})` : totalModules;
+  document.getElementById('r-area').textContent=area1.toFixed(1);
+  document.getElementById('r-perim').textContent=perim.toFixed(1);
+  document.getElementById('r-panel').textContent=panel.toFixed(1);
+  document.getElementById('r-mass').textContent=fmt(mass);
+  document.getElementById('hs-count').textContent=totalModules;
+  document.getElementById('hs-area').textContent=area1.toFixed(1);
+  document.getElementById('hs-fullarea').textContent=fullArea.toFixed(1);
+  document.getElementById('hs-volume').textContent=volume.toFixed(0);
+  document.getElementById('hs-panel').textContent=panel.toFixed(1);
+}
+
+// ══════════════════════════════════════════════
+// COST CALCULATOR (right panel)
+// ══════════════════════════════════════════════
+function toggleMsg(label, cls) {
+  setTimeout(()=>{
+    const checked = label.querySelector('input').checked;
+    label.classList.toggle(cls, checked);
+  }, 0);
+}
+
+// Returns client data object from left sidebar fields
+function getClientData() {
+  const name    = document.getElementById('cl-name').value.trim()    || '—';
+  const phone   = document.getElementById('cl-phone').value.trim()   || '—';
+  const email   = document.getElementById('cl-email').value.trim()   || '—';
+  const address = document.getElementById('cl-address').value.trim() || '—';
+  const tg      = document.getElementById('cl-tg').checked;
+  const wa      = document.getElementById('cl-wa').checked;
+  const messengers = [tg?'Telegram':'', wa?'WhatsApp':''].filter(Boolean).join(', ') || '—';
+  return { name, phone, email, address, messengers, tg, wa };
+}
+
+function formatPhone(inp) {
+  let digits = inp.value.replace(/\D/g, '');
+  // Убираем 7 или 8 в начале
+  if(digits.startsWith('7')) digits = digits.slice(1);
+  if(digits.startsWith('8')) digits = digits.slice(1);
+  digits = digits.slice(0, 10); // максимум 10 цифр после +7
+
+  let out = '+7';
+  if(digits.length > 0) out += ' (' + digits.slice(0,3);
+  if(digits.length >= 3) out += ') ' + digits.slice(3,6);
+  if(digits.length >= 6) out += '-' + digits.slice(6,8);
+  if(digits.length >= 8) out += '-' + digits.slice(8,10);
+
+  inp.value = out;
+}
+
+function phoneKeydown(e, inp) {
+  // Не даём удалить префикс «+7 »
+  if((e.key==='Backspace'||e.key==='Delete') && inp.selectionStart <= 3 && inp.selectionEnd <= 3) {
+    e.preventDefault();
+  }
+}
+
+// ── ADDRESS GEOCODER (Nominatim / OpenStreetMap — без ключа, без CORS)
+let addrTimer  = null;
+let addrCoords = null;
+
+function onAddressInput() {
+  clearTimeout(addrTimer);
+  const q = document.getElementById('cl-address').value.trim();
+  setAddrStatus('', '');
+  hideAddressSugg();
+  addrCoords = null;
+  if(q.length < 3) return;
+  addrTimer = setTimeout(() => fetchSuggest(q), 500);
+}
+
+// Nominatim autocomplete
+async function fetchSuggest(q) {
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&addressdetails=1&limit=6&accept-language=ru`;
+    const res = await fetch(url, { headers: { 'Accept-Language': 'ru' } });
+    if(!res.ok) throw new Error('nominatim error');
+    const data = await res.json();
+    if(!data.length) { setAddrStatus('Адрес не найден', '#B85C00'); return; }
+    showAddressSugg(data);
+  } catch(e) {
+    setAddrStatus('⚠ Нет подключения к интернету.', '#B85C00');
+  }
+}
+
+function showAddressSugg(results) {
+  const box = document.getElementById('addr-suggestions');
+  box.innerHTML = '';
+  results.forEach(r => {
+    const full = r.display_name || '';
+    // Красиво форматируем: город + улица первыми
+    const a = r.address || {};
+    const parts = [
+      a.road || a.pedestrian || a.footway || '',
+      a.house_number || '',
+      a.city || a.town || a.village || a.county || '',
+      a.state || '',
+      a.country || ''
+    ].filter(Boolean);
+    const short = parts.slice(0,3).join(', ');
+    const div = document.createElement('div');
+    div.style.cssText = 'padding:7px 10px;cursor:pointer;border-bottom:1px solid #F0EDE8;line-height:1.4;user-select:none;';
+    div.innerHTML = `<div style="font-weight:600;color:#1A1614;font-size:12px;">${short||full}</div>`
+                  + `<div style="color:#888;font-size:10px;">${full}</div>`;
+    div.addEventListener('mousedown', e => {
+      e.preventDefault();
+      document.getElementById('cl-address').value = short || full;
+      hideAddressSugg();
+      addrCoords = { lat: +r.lat, lon: +r.lon };
+      setAddrStatus(`✓ ${short||full}`, '#1A6B3C');
+      showAddrMap(+r.lat, +r.lon, short||full);
+    });
+    box.appendChild(div);
+  });
+  box.style.display = 'block';
+}
+
+function hideAddressSugg() {
+  const box = document.getElementById('addr-suggestions');
+  if(box) box.style.display = 'none';
+}
+
+function showAddrMap(lat, lon, title) {
+  const wrap   = document.getElementById('addr-map-wrap');
+  const iframe = document.getElementById('addr-map');
+  // Яндекс embed iframe — работает без ключа
+  iframe.src = `https://yandex.ru/map-widget/v1/?ll=${lon}%2C${lat}&z=15&pt=${lon},${lat},pm2rdm&text=${encodeURIComponent(title)}&lang=ru_RU`;
+  wrap.style.display = 'block';
+}
+
+function setAddrStatus(msg, color) {
+  const el = document.getElementById('addr-status');
+  if(!el) return;
+  el.textContent = msg;
+  el.style.color  = color || '#888';
+}
+
+function onPurposeChange(){
+  const p=document.getElementById('cp-purpose').value;
+  document.getElementById('cp-corridor-section').style.display =
+    (p==='living'||p==='office') ? 'block' : 'none';
+  if(p!=='living'&&p!=='office'){
+    document.getElementById('co-corridor').checked=false;
+    document.getElementById('corr-settings').style.display='none';
+    updateCorridorSlider(false);
+  }
+}
+function onSysTypeChange(){
+  const t=document.getElementById('cp-sysType').value;
+  const fl=document.getElementById('cp-floors');
+  fl.max = t==='MBK' ? 3 : 4;
+  if(+fl.value>+fl.max){ fl.value=fl.max; document.getElementById('cp-floors-val').textContent=fl.value; }
+  buildPalette();
+  updateResults();
+}
+function onCorridorToggle(){
+  const on=document.getElementById('co-corridor').checked;
+  document.getElementById('corr-settings').style.display=on?'block':'none';
+  updateCorridorSlider(on);
+}
+function updateCorridorSlider(on){
+  const sl=document.getElementById('co-corr-slider');
+  const kn=document.getElementById('co-corr-knob');
+  sl.style.background=on?'#7B3FCC':getComputedStyle(document.documentElement).getPropertyValue('--border');
+  kn.style.transform=on?'translateX(16px)':'translateX(0)';
+}
+function toggleOpt(label){
+  setTimeout(()=>label.classList.toggle('checked',label.querySelector('input').checked),0);
+}
+
+function calcCost(){
+  if(!modules.length){ alert('Разместите хотя бы один модуль на плане'); return; }
+
+  const sysType = document.getElementById('cp-sysType').value;
+  // Исключаем наружные лестницы из площади и периметра — они вне контура здания
+  const buildingMods = modules.filter(m => !getType(m).extStair);
+  const extStairMods = modules.filter(m =>  getType(m).extStair);
+  const count    = buildingMods.length;
+  const area1    = buildingMods.reduce((s,m)=>{ const b=bbox(m); return s+b.l*b.w; },0);
+  const perim    = computePerimeterFor(buildingMods);
+  const floors   = +document.getElementById('cp-floors').value;
+  const innerH   = +document.getElementById('cp-floorh').value;
+  const outerH   = innerH + 0.23;
+  const climate  = +document.getElementById('cp-climate').value;
+  const ins      = +document.getElementById('cp-insul').value;
+  const purpose  = document.getElementById('cp-purpose').value;
+  const basePrice = +document.getElementById('cp-price').value;
+
+  // MB-K: каждый этаж — отдельный слой модулей; MB-N: общая рама (1 слой)
+  const totalModules = sysType==='MBK' ? count * floors : count;
+
+  // Лестничные модули на плане — считаем отдельно (+40% к их площади)
+  const stairMods   = buildingMods.filter(m => getType(m).stair);
+  const stairArea1  = stairMods.reduce((s,m)=>{ const b=bbox(m); return s+b.l*b.w; },0);
+  const regularArea1 = area1 - stairArea1;
+
+  const fullArea = area1 * floors;
+  const panelA   = perim * outerH * floors;
+  const volume   = area1 * outerH * floors;
+  const mass     = buildingMods.reduce((s,m)=>s+getType(m).massUnit,0) * floors;
+
+  // Коридор — убран из расчёта
+  const corrEnabled = false;
+  const corrW = 0;
+  const corrArea = 0;
+  const usableArea = fullArea;
+
+  // Нагрузки
+  const snowLoad = climate===1?3.0:climate===2?1.8:1.2;
+  const windLoad = climate===1?.48:climate===2?.38:.30;
+  const liveLoad = purpose==='living'?150:purpose==='canteen'?300:purpose==='industrial'?600:200;
+  const deadLoad = 200;
+  const foundLoad = (mass + (liveLoad+deadLoad)*fullArea)/1000;
+
+  // Коэффициенты
+  const insCoeff   = ins===200?1.12:ins===100?.93:1.0;
+  const climCoeff  = climate===1?1.08:climate===3?.97:1.0;
+  const floorCoeff = floors>1?1+(floors-1)*.06:1.0;
+  const corrCoeff  = 1.0; // коридор отключён
+  const hCoeff     = outerH >= 4.23 ? 1.10 : outerH >= 3.73 ? 1.05 : outerH <= 3.23 ? 0.97 : 1.0;
+  const sysCoeff   = (sysType==='MBK' && floors > 1) ? 1.20 : 1.0; // MB-K многоэтаж: раздельные рамы +20%
+
+  // Базовые конструкции:
+  // - обычные модули по базовой цене
+  // - лестничные модули +40% к базовой цене (металлическая лестница, усиленный каркас)
+  const basePricePerM2 = basePrice * insCoeff * climCoeff * floorCoeff * corrCoeff * hCoeff * sysCoeff;
+  const baseRegular    = basePricePerM2 * regularArea1 * floors;
+  const baseStair      = basePricePerM2 * 1.40 * stairArea1 * floors;
+  const baseTotal      = baseRegular + baseStair;
+
+  // Для отображения в смете
+  const stairModCost = baseStair > 0 ? Math.round(baseStair) : 0;
+
+  // Сэндвич-панели (наружный периметр × высота × цена/м²)
+  const sandwichUnitPrice = ins===200?7200:ins===100?4800:5500;
+  const sandwichTotal = panelA * sandwichUnitPrice;
+
+  // Коридор — отключён
+  const corrTotal = 0;
+
+  // Опции — детализированный расчёт
+  let extras = 0;
+  let extrasBreakdown = {};
+
+  // Двери наружные: 1 дверь на 1 этаж, 82 000 руб.
+  if(document.getElementById('co-door').checked){
+    const doorCount = floors;
+    const doorCost = doorCount * 82000;
+    extras += doorCost;
+    extrasBreakdown.door = { label:`Двери наружные (${doorCount} шт × 82 000)`, cost: doorCost };
+  }
+
+  // Окна: по числу коротких сторон модулей, выходящих на наружный периметр.
+  // Короткая сторона модуля — меньшее измерение (mw).
+  // Для каждого модуля проверяем 4 стороны: если сторона совпадает с короткой и
+  // с той стороны нет соседнего модуля — это окно.
+  if(document.getElementById('co-window').checked){
+    const RES = 0.01; // точность сравнения координат
+    let exposedShortSides = 0;
+    modules.forEach(m => {
+      const mt = getType(m);
+      const b  = bbox(m); // {x, y, l, w} — l вдоль X, w вдоль Y
+      const shortSide = Math.min(mt.l, mt.w); // короткая сторона модуля в метрах
+      // Определяем, какая ось является короткой стороной после учёта поворота
+      const shortIsY = b.w <= b.l + RES; // короткая сторона направлена вдоль Y (лево/право)
+      // Проверяем каждую из 4 сторон модуля
+      // Сторона считается «короткой», если её длина ≈ shortSide
+      const sides = [
+        { dx:-RES, dy:0,   sideLen: b.w }, // левая сторона, длина b.w
+        { dx:b.l+RES, dy:0, sideLen: b.w }, // правая сторона, длина b.w
+        { dx:0, dy:-RES,   sideLen: b.l }, // верхняя сторона, длина b.l
+        { dx:0, dy:b.w+RES, sideLen: b.l }, // нижняя сторона, длина b.l
+      ];
+      sides.forEach(side => {
+        // Является ли эта сторона короткой?
+        const isShort = Math.abs(side.sideLen - Math.min(b.l, b.w)) < RES * 10;
+        if(!isShort) return;
+        // Есть ли соседний модуль с этой стороны?
+        const testX = b.x + side.dx + (side.dx === 0 ? b.l/2 : 0);
+        const testY = b.y + side.dy + (side.dy === 0 ? b.w/2 : 0);
+        const neighbor = modules.some(o => {
+          if(o.id === m.id) return false;
+          const ob = bbox(o);
+          return testX >= ob.x - RES && testX <= ob.x + ob.l + RES &&
+                 testY >= ob.y - RES && testY <= ob.y + ob.w + RES;
+        });
+        if(!neighbor) exposedShortSides++;
+      });
+    });
+    // MB-K: окна только на 1-м этаже (короткие стороны на плане)
+    // MB-N: умножаем на число этажей
+    const winCount = sysType === 'MBN' ? exposedShortSides * floors : exposedShortSides;
+    const winCost  = winCount * 45000;
+    extras += winCost;
+    extrasBreakdown.window = { label:`Окна ПВХ (${winCount} шт × 45 000)`, cost: winCost };
+  }
+
+  if(document.getElementById('co-elec').checked){
+    const v = Math.round(fullArea*1800);
+    extras += v; extrasBreakdown.elec={label:'Электрика',cost:v};
+  }
+  if(document.getElementById('co-plumb').checked){
+    const v=Math.round(fullArea*2400);
+    extras += v; extrasBreakdown.plumb={label:'Сантехника',cost:v};
+  }
+  if(document.getElementById('co-heat').checked){
+    const v=Math.round(fullArea*1600);
+    extras += v; extrasBreakdown.heat={label:'Отопление',cost:v};
+  }
+
+  // Кровля: 8 500 руб/м² площади здания (площадь 1-го этажа — кровля одна)
+  if(document.getElementById('co-roof').checked){
+    const v=Math.round(area1*8560);
+    extras += v; extrasBreakdown.roof={label:`Доп. кровля (${area1.toFixed(1)} м² × 8 560)`,cost:v};
+  }
+
+  if(document.getElementById('co-stair').checked && floors>1){
+    const v=(floors-1)*85000;
+    extras += v; extrasBreakdown.stair={label:`Лестница (${floors-1} пролёт × 85 000)`,cost:v};
+  }
+  if(document.getElementById('co-ramp').checked){
+    extras += 45000; extrasBreakdown.ramp={label:'Пандус',cost:45000};
+  }
+
+  // Наружные лестницы DoorHan — фиксированная цена за каждую
+  if(extStairMods.length > 0) {
+    const extStairCost = extStairMods.reduce((s,m) => s + (getType(m).priceFixed||0), 0);
+    extras += extStairCost;
+    const names = extStairMods.map(m => getType(m).name).join(', ');
+    extrasBreakdown.extStair = { label:`Наружные лестницы DoorHan (${extStairMods.length} шт): ${names}`, cost: extStairCost };
+  }
+
+  const TOTAL = baseTotal + sandwichTotal + corrTotal + extras;
+
+  // ── Обновляем header
+  document.getElementById('hs-fullarea').textContent = fullArea.toFixed(1);
+  document.getElementById('hs-volume').textContent   = volume.toFixed(0);
+
+  // ── Заполняем результаты
+  document.getElementById('cr-base').textContent =
+    fmt(Math.round(baseTotal))+' ₽'
+    + (sysType==='MBK' && floors > 1 ? ' (+20% MB-K)' : '')
+    + (stairModCost > 0 ? ` вкл. лестн. +40%` : '');
+  document.getElementById('cr-sandwich').textContent = fmt(Math.round(sandwichTotal))+' ₽';
+  document.getElementById('cr-extras').textContent   = fmt(Math.round(extras))+' ₽';
+  document.getElementById('cr-total').textContent    = fmt(Math.round(TOTAL/1000000))+' млн ₽';
+  document.getElementById('cr-total2').textContent   = fmt(Math.round(TOTAL))+' ₽';
+  document.getElementById('cr-per-m2').textContent   = fmt(Math.round(TOTAL/fullArea))+' ₽';
+
+  document.getElementById('cr-corridor-row').style.display='none';
+  document.getElementById('cr-useful-row').style.display='none';
+  document.getElementById('cr-per-useful-row').style.display='none';
+
+  document.getElementById('cr-snow').textContent  = snowLoad.toFixed(1);
+  document.getElementById('cr-wind').textContent  = windLoad.toFixed(2);
+  document.getElementById('cr-live').textContent  = liveLoad;
+  document.getElementById('cr-found').textContent = foundLoad.toFixed(1);
+
+  // Детализация доп. опций
+  const detEl = document.getElementById('cr-extras-detail');
+  detEl.innerHTML = '';
+  Object.values(extrasBreakdown).forEach(item => {
+    detEl.innerHTML += `<div class="cost-row"><span class="cost-row-label" style="color:var(--text2)">${item.label}</span><span class="cost-row-val" style="font-size:12px">${fmt(item.cost)} ₽</span></div>`;
+  });
+
+  // Ключевые показатели
+  document.getElementById('cr-fullarea-r').textContent = fullArea.toFixed(1);
+  document.getElementById('cr-volume-r').textContent   = volume.toFixed(0);
+  document.getElementById('cr-floorh-r').textContent   = `${innerH.toFixed(2)} (нар. ${outerH.toFixed(2)})`;
+  document.getElementById('cr-sandwich-area-r').textContent = panelA.toFixed(1);
+
+  document.getElementById('cost-results').style.display='block';
+  document.getElementById('hs-cost').textContent = fmt(Math.round(TOTAL/1000000))+' млн';
+  document.getElementById('hs-perm2').textContent = fmt(Math.round(TOTAL/fullArea))+' ₽';
+}
+
+function fmt(n){ return Math.round(n).toLocaleString('ru-RU'); }
+
+// Рендерит только здание (без стройплощадки и фона) в offscreen canvas
+// Возвращает dataURL PNG с полями PAD пикселей вокруг здания
+function getBuildingPlanImage(padPx, scPx) {
+  if(!modules.length) return canvas.toDataURL('image/png');
+  const PAD = padPx || 40;
+  const SC  = scPx  || 50; // px/м для документа
+
+  // Bbox здания (без extStair)
+  const bldMods = modules.filter(m => !getType(m).extStair);
+  const extMods  = modules.filter(m =>  getType(m).extStair);
+  let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+  modules.forEach(m=>{ // включаем extStair для полного bbox
+    const b=bbox(m);
+    minX=Math.min(minX,b.x); minY=Math.min(minY,b.y);
+    maxX=Math.max(maxX,b.x+b.l); maxY=Math.max(maxY,b.y+b.w);
+  });
+  const bldW=(maxX-minX)*SC, bldH=(maxY-minY)*SC;
+  const W=Math.ceil(bldW+PAD*2), H=Math.ceil(bldH+PAD*2);
+
+  const oc = document.createElement('canvas');
+  oc.width=W; oc.height=H;
+  const oc2=oc.getContext('2d');
+
+  // Белый фон
+  oc2.fillStyle='#FFFFFF'; oc2.fillRect(0,0,W,H);
+
+  // Лёгкая сетка 1м
+  oc2.strokeStyle='rgba(0,0,0,0.07)'; oc2.lineWidth=0.5;
+  for(let gx=minX;gx<=maxX+1;gx+=1){
+    const cx=(gx-minX)*SC+PAD;
+    oc2.beginPath(); oc2.moveTo(cx,PAD); oc2.lineTo(cx,H-PAD); oc2.stroke();
+  }
+  for(let gy=minY;gy<=maxY+1;gy+=1){
+    const cy=(gy-minY)*SC+PAD;
+    oc2.beginPath(); oc2.moveTo(PAD,cy); oc2.lineTo(W-PAD,cy); oc2.stroke();
+  }
+
+  // Вспомогательные функции координат для offscreen canvas
+  const ox=(mx)=>(mx-minX)*SC+PAD;
+  const oy=(my)=>(my-minY)*SC+PAD;
+
+  // Рисуем модули
+  modules.forEach(m=>{
+    const mt=getType(m), b=bbox(m);
+    const cpx=ox(b.x), cpy=oy(b.y), pw=b.l*SC, ph=b.w*SC;
+
+    if(mt.extStair){
+      oc2.fillStyle='rgba(26,107,60,0.06)'; oc2.fillRect(cpx,cpy,pw,ph);
+      oc2.save(); oc2.beginPath(); oc2.rect(cpx,cpy,pw,ph); oc2.clip();
+      drawExtStairOnCtx(oc2, cpx, cpy, pw, ph, '#1A6B3C', mt.stairFloors||2);
+      oc2.restore();
+      oc2.strokeStyle='#1A6B3C'; oc2.lineWidth=1.5;
+      oc2.setLineDash([5,3]); oc2.strokeRect(cpx+.75,cpy+.75,pw-1.5,ph-1.5); oc2.setLineDash([]);
+      if(pw>50){
+        oc2.fillStyle='#1A6B3C'; oc2.font=`bold 9px 'IBM Plex Mono',monospace`;
+        oc2.textAlign='center'; oc2.textBaseline='middle';
+        oc2.fillText(`ЛЕСТН. ${mt.stairFloors||2} эт.`,cpx+pw/2,cpy+ph/2);
+      }
+      return;
+    }
+
+    oc2.fillStyle=mt.bodyColor; oc2.fillRect(cpx,cpy,pw,ph);
+    // Лёгкая штриховка
+    oc2.save(); oc2.beginPath(); oc2.rect(cpx,cpy,pw,ph); oc2.clip();
+    oc2.strokeStyle=mt.strokeColor+'22'; oc2.lineWidth=0.6;
+    for(let i=-ph;i<pw+ph;i+=10){oc2.beginPath();oc2.moveTo(cpx+i,cpy);oc2.lineTo(cpx+i+ph,cpy+ph);oc2.stroke();}
+    oc2.restore();
+    // Рамка
+    oc2.strokeStyle=mt.strokeColor; oc2.lineWidth=1.5;
+    oc2.strokeRect(cpx+.75,cpy+.75,pw-1.5,ph-1.5);
+    // Лестничный символ или подпись
+    if(mt.stair && pw>24 && ph>12){
+      oc2.save(); oc2.beginPath(); oc2.rect(cpx,cpy,pw,ph); oc2.clip();
+      drawStairSymbolOnCanvas(oc2,cpx,cpy,pw,ph,mt.strokeColor,SC);
+      oc2.restore();
+    } else if(pw>24 && ph>12){
+      oc2.fillStyle=mt.labelColor;
+      oc2.font=`bold ${Math.max(8,Math.min(11,ph*0.22))}px 'IBM Plex Mono',monospace`;
+      oc2.textAlign='center'; oc2.textBaseline='middle';
+      oc2.fillText(`${b.l.toFixed(1)}×${b.w.toFixed(1)}`,cpx+pw/2,cpy+ph/2);
+    }
+  });
+
+  // Периметр (красная линия)
+  const RES=0.1, occ=new Set();
+  bldMods.forEach(m=>{
+    const b=bbox(m),x0=Math.round(b.x/RES),y0=Math.round(b.y/RES),lc=Math.round(b.l/RES),wc=Math.round(b.w/RES);
+    for(let ix=0;ix<lc;ix++) for(let iy=0;iy<wc;iy++) occ.add(`${x0+ix},${y0+iy}`);
+  });
+  oc2.strokeStyle='#E74C3C'; oc2.lineWidth=2.5;
+  occ.forEach(k=>{
+    const [x,y]=k.split(',').map(Number);
+    [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>{
+      if(!occ.has(`${x+dx},${y+dy}`)){
+        let x1,y1,x2,y2;
+        if(dx===1)  {x1=(x+1)*RES;y1=y*RES;    x2=(x+1)*RES;y2=(y+1)*RES;}
+        if(dx===-1) {x1=x*RES;    y1=y*RES;    x2=x*RES;    y2=(y+1)*RES;}
+        if(dy===1)  {x1=x*RES;    y1=(y+1)*RES;x2=(x+1)*RES;y2=(y+1)*RES;}
+        if(dy===-1) {x1=x*RES;    y1=y*RES;    x2=(x+1)*RES;y2=y*RES;}
+        oc2.beginPath(); oc2.moveTo(ox(x1),oy(y1)); oc2.lineTo(ox(x2),oy(y2)); oc2.stroke();
+      }
+    });
+  });
+
+  // Размерные линии
+  const DIM='#1A3A8F';
+  oc2.strokeStyle=DIM; oc2.fillStyle=DIM; oc2.lineWidth=1;
+  oc2.font=`bold 11px 'IBM Plex Mono',monospace`;
+
+  const totalW=maxX-minX, totalH=maxY-minY;
+  // Снизу — длина
+  const by=H-PAD+16;
+  oc2.beginPath(); oc2.moveTo(PAD,by); oc2.lineTo(W-PAD,by); oc2.stroke();
+  oc2.beginPath(); oc2.moveTo(PAD,by-4); oc2.lineTo(PAD,by+4); oc2.stroke();
+  oc2.beginPath(); oc2.moveTo(W-PAD,by-4); oc2.lineTo(W-PAD,by+4); oc2.stroke();
+  oc2.textAlign='center'; oc2.textBaseline='top';
+  oc2.fillText(`${totalW.toFixed(2)} м`, W/2, by+3);
+  // Справа — ширина
+  const rx=W-PAD+16;
+  oc2.beginPath(); oc2.moveTo(rx,PAD); oc2.lineTo(rx,H-PAD); oc2.stroke();
+  oc2.beginPath(); oc2.moveTo(rx-4,PAD); oc2.lineTo(rx+4,PAD); oc2.stroke();
+  oc2.beginPath(); oc2.moveTo(rx-4,H-PAD); oc2.lineTo(rx+4,H-PAD); oc2.stroke();
+  oc2.save(); oc2.translate(rx+16,H/2); oc2.rotate(Math.PI/2);
+  oc2.textAlign='center'; oc2.textBaseline='middle';
+  oc2.fillText(`${totalH.toFixed(2)} м`,0,0);
+  oc2.restore();
+
+  // Координаты углов
+  oc2.strokeStyle='#B85C00'; oc2.fillStyle='#B85C00';
+  oc2.lineWidth=1; oc2.font=`10px 'IBM Plex Mono',monospace`;
+  oc2.setLineDash([3,3]);
+  [{mx:minX,my:minY,ax:'right',ay:'bottom',ox:-5,oy:-5},
+   {mx:maxX,my:minY,ax:'left', ay:'bottom',ox:5,oy:-5},
+   {mx:maxX,my:maxY,ax:'left', ay:'top',   ox:5,oy:5},
+   {mx:minX,my:maxY,ax:'right',ay:'top',   ox:-5,oy:5}].forEach(c=>{
+    const cpx=ox(c.mx), cpy=oy(c.my);
+    oc2.beginPath(); oc2.moveTo(cpx-5,cpy); oc2.lineTo(cpx+5,cpy); oc2.stroke();
+    oc2.beginPath(); oc2.moveTo(cpx,cpy-5); oc2.lineTo(cpx,cpy+5); oc2.stroke();
+    oc2.textAlign=c.ax; oc2.textBaseline=c.ay;
+    oc2.fillText(`(${c.mx.toFixed(2)};${c.my.toFixed(2)})`,cpx+c.ox,cpy+c.oy);
+  });
+  oc2.setLineDash([]);
+
+  return oc.toDataURL('image/png');
+}
+
+// ══════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════
+function render(){
+  const W=canvas.width,H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#FFFFFF'; ctx.fillRect(0,0,W,H);
+
+  const sp=m2c(0,0),sw=site.w*scale,sh=site.h*scale;
+  ctx.fillStyle='#FAFAF8'; ctx.fillRect(sp.x,sp.y,sw,sh);
+
+  // minor grid
+  ctx.strokeStyle='rgba(0,0,0,.07)'; ctx.lineWidth=.5;
+  for(let gx=0;gx<=site.w+gridStep;gx+=gridStep){
+    const cx=gx*scale+pan.x; if(cx<sp.x-1||cx>sp.x+sw+1) continue;
+    ctx.beginPath(); ctx.moveTo(cx,sp.y); ctx.lineTo(cx,sp.y+sh); ctx.stroke();
+  }
+  for(let gy=0;gy<=site.h+gridStep;gy+=gridStep){
+    const cy=gy*scale+pan.y; if(cy<sp.y-1||cy>sp.y+sh+1) continue;
+    ctx.beginPath(); ctx.moveTo(sp.x,cy); ctx.lineTo(sp.x+sw,cy); ctx.stroke();
+  }
+  // major grid 5m
+  ctx.strokeStyle='rgba(0,0,0,.16)'; ctx.lineWidth=.8;
+  for(let gx=0;gx<=site.w;gx+=5){ const cx=gx*scale+pan.x; ctx.beginPath(); ctx.moveTo(cx,sp.y); ctx.lineTo(cx,sp.y+sh); ctx.stroke(); }
+  for(let gy=0;gy<=site.h;gy+=5){ const cy=gy*scale+pan.y; ctx.beginPath(); ctx.moveTo(sp.x,cy); ctx.lineTo(sp.x+sw,cy); ctx.stroke(); }
+
+  // axis labels
+  ctx.fillStyle='#AAAAAA'; ctx.font=`9px 'IBM Plex Mono'`; ctx.textBaseline='top';
+  ctx.textAlign='center';
+  for(let gx=0;gx<=site.w;gx+=5) ctx.fillText(`${gx}`,gx*scale+pan.x,sp.y+sh+4);
+  ctx.textAlign='right'; ctx.textBaseline='middle';
+  for(let gy=0;gy<=site.h;gy+=5) ctx.fillText(`${gy}`,sp.x-5,gy*scale+pan.y);
+
+  // site border
+  ctx.strokeStyle='#1A6B3C'; ctx.lineWidth=2.5;
+  ctx.strokeRect(sp.x,sp.y,sw,sh);
+
+  // dimension labels
+  ctx.fillStyle='#888'; ctx.font=`bold 11px 'IBM Plex Mono'`;
+  ctx.textAlign='center'; ctx.textBaseline='bottom';
+  ctx.fillText(`${site.w} м`,sp.x+sw/2,sp.y-6);
+  ctx.save(); ctx.translate(sp.x-22,sp.y+sh/2); ctx.rotate(-Math.PI/2);
+  ctx.textAlign='center'; ctx.textBaseline='bottom'; ctx.fillText(`${site.h} м`,0,0); ctx.restore();
+
+  // modules
+  modules.forEach(m=>drawModule(m));
+
+  // ghost
+  if(tool==='place'&&ghostPos){
+    const mt=MODULE_TYPES.find(t=>t.id===selectedTypeId);
+    if(mt) {
+      const gm={id:-1,typeId:selectedTypeId,x:ghostPos.x,y:ghostPos.y,rotated:false};
+      const ok=inSite(gm)&&!anyOverlap(gm);
+      drawGhost(gm,ok);
+    }
+  }
+
+  // perimeter
+  if(modules.length>0) drawPerimeter();
+
+  // габаритные размеры и привязки углов
+  if(modules.length>0) drawDimensions();
+}
+
+function drawModule(m){
+  const mt=getType(m),b=bbox(m),cp=m2c(b.x,b.y),pw=b.l*scale,ph=b.w*scale,sel=m.id===selectedId;
+
+  if(mt.extStair) {
+    // Наружная лестница с площадками: лёгкая зелёная заливка, пунктирный контур
+    ctx.fillStyle='rgba(26,107,60,0.06)'; ctx.fillRect(cp.x,cp.y,pw,ph);
+    ctx.save();
+    ctx.beginPath(); ctx.rect(cp.x,cp.y,pw,ph); ctx.clip();
+    // Используем drawExtStairSymbol адаптированную для ctx (переводим координаты)
+    drawExtStairOnCtx(ctx, cp.x, cp.y, pw, ph, sel?'#C8102E':'#1A6B3C', mt.stairFloors||2);
+    ctx.restore();
+    // Пунктирный контур
+    ctx.strokeStyle=sel?'#C8102E':'#1A6B3C';
+    ctx.lineWidth=sel?2:1.5;
+    ctx.setLineDash([5,3]);
+    ctx.strokeRect(cp.x+.75,cp.y+.75,pw-1.5,ph-1.5);
+    ctx.setLineDash([]);
+    if(sel){
+      const cs=6; ctx.strokeStyle='#1A6B3C'; ctx.lineWidth=2;
+      [[0,0],[1,0],[0,1],[1,1]].forEach(([fx,fy])=>{
+        const ex=cp.x+fx*pw,ey=cp.y+fy*ph;
+        ctx.beginPath(); ctx.moveTo(ex+(fx?-cs:cs),ey); ctx.lineTo(ex,ey); ctx.lineTo(ex,ey+(fy?-cs:cs)); ctx.stroke();
+      });
+    }
+    if(pw>60&&ph>10){
+      ctx.fillStyle=sel?'#C8102E':'#1A6B3C';
+      ctx.font=`600 ${Math.max(7,Math.min(10,ph*.25))}px 'IBM Plex Mono'`;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(`ЛЕСТН. ${mt.stairFloors||2} эт.`, cp.x+pw/2, cp.y+ph/2);
+    }
+    return;
+  }
+
+  ctx.fillStyle=mt.bodyColor; ctx.fillRect(cp.x,cp.y,pw,ph);
+  // hatch
+  ctx.save(); ctx.beginPath(); ctx.rect(cp.x,cp.y,pw,ph); ctx.clip();
+  ctx.strokeStyle=mt.strokeColor+'22'; ctx.lineWidth=.6;
+  for(let i=-ph;i<pw+ph;i+=10){ ctx.beginPath(); ctx.moveTo(cp.x+i,cp.y); ctx.lineTo(cp.x+i+ph,cp.y+ph); ctx.stroke(); }
+  ctx.restore();
+  // border
+  if(sel){ ctx.shadowColor='rgba(200,16,46,.4)'; ctx.shadowBlur=10; }
+  ctx.strokeStyle=sel?'#C8102E':mt.strokeColor; ctx.lineWidth=sel?2.5:1.5;
+  ctx.strokeRect(cp.x+.75,cp.y+.75,pw-1.5,ph-1.5); ctx.shadowBlur=0;
+  // corners
+  if(sel){
+    const cs=7; ctx.strokeStyle='#C8102E'; ctx.lineWidth=2.5;
+    [[0,0],[1,0],[0,1],[1,1]].forEach(([fx,fy])=>{
+      const ex=cp.x+fx*pw,ey=cp.y+fy*ph;
+      ctx.beginPath(); ctx.moveTo(ex+(fx?-cs:cs),ey); ctx.lineTo(ex,ey); ctx.lineTo(ex,ey+(fy?-cs:cs)); ctx.stroke();
+    });
+  }
+  // label / stair symbol
+  if(pw>28&&ph>13){
+    if(mt.stair) {
+      // Рисуем символ лестницы поверх модуля на плане
+      ctx.save();
+      ctx.beginPath(); ctx.rect(cp.x,cp.y,pw,ph); ctx.clip();
+      // используем offscreen-подобный вызов через нашу функцию с canvas ctx
+      drawStairSymbolOnCanvas(ctx, cp.x, cp.y, pw, ph, sel?'#C8102E':mt.strokeColor, scale);
+      ctx.restore();
+      // Подпись "Лестн." снизу
+      if(ph>30) {
+        ctx.fillStyle=sel?'#C8102E':mt.labelColor;
+        ctx.font=`600 ${Math.max(8,Math.min(10,ph*.18))}px 'IBM Plex Mono'`;
+        ctx.textAlign='center'; ctx.textBaseline='bottom';
+        ctx.fillText('ЛЕСТН.',cp.x+pw/2,cp.y+ph-3);
+      }
+    } else {
+      const fs=Math.max(8,Math.min(12,ph*.22));
+      ctx.fillStyle=sel?'#C8102E':mt.labelColor;
+      ctx.font=`600 ${fs}px 'IBM Plex Mono'`;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(`${b.l.toFixed(1)}×${b.w.toFixed(1)}`,cp.x+pw/2,cp.y+ph/2);
+      if(m.rotated&&pw>48&&ph>22){ ctx.font=`${Math.max(7,fs*.8)}px 'IBM Plex Mono'`; ctx.fillStyle=mt.labelColor+'88'; ctx.fillText('↻',cp.x+pw/2,cp.y+ph*.76); }
+    }
+  }
+}
+
+function drawStairSymbolOnCanvas(c, ox, oy, pw, ph, color, sc) {
+  const steps = Math.max(3, Math.round(Math.min(pw,ph)/12));
+  const sw = pw/steps, sh = ph/steps;
+  c.strokeStyle = color; c.lineWidth = Math.max(1, sc*0.04);
+  for(let i=0;i<steps;i++){
+    const x=ox+i*sw, y=oy+ph-(i+1)*sh;
+    c.beginPath(); c.moveTo(x,y+sh); c.lineTo(x+sw,y+sh); c.stroke();
+    c.beginPath(); c.moveTo(x+sw,y+sh); c.lineTo(x+sw,y); c.stroke();
+  }
+  // Стрелка направления подъёма
+  const ax1=ox+pw*.12, ay1=oy+ph*.88, ax2=ox+pw*.82, ay2=oy+ph*.12;
+  c.lineWidth = Math.max(1.5, sc*0.05);
+  c.beginPath(); c.moveTo(ax1,ay1); c.lineTo(ax2,ay2); c.stroke();
+  const ang=Math.atan2(ay2-ay1,ax2-ax1), al=Math.max(6,sc*0.2);
+  c.beginPath();
+  c.moveTo(ax2,ay2); c.lineTo(ax2-al*Math.cos(ang-.4),ay2-al*Math.sin(ang-.4));
+  c.moveTo(ax2,ay2); c.lineTo(ax2-al*Math.cos(ang+.4),ay2-al*Math.sin(ang+.4));
+  c.stroke();
+}
+
+// Рисует лестницу с площадками на main canvas (с координатами смещения ox, oy)
+function drawExtStairOnCtx(c, ox, oy, pw, ph, color, numFloors) {
+  const numMarches = numFloors - 1;
+  const marchLen   = 3.0, landingLen = 1.5;
+  const totalLen   = numMarches * (marchLen + landingLen);
+  const pxPerM     = pw / totalLen;
+
+  c.strokeStyle = color; c.lineWidth = 1;
+  let curX = ox;
+
+  for(let i = 0; i < numMarches; i++) {
+    const mw = marchLen * pxPerM;
+    const lw = landingLen * pxPerM;
+
+    // Марш — ступени
+    const steps = Math.max(4, Math.round(mw / 6));
+    const sw = mw / steps, sh = ph / steps;
+    for(let s = 0; s < steps; s++) {
+      const sx = curX + s * sw;
+      const sy = oy + ph - (s + 1) * sh;
+      c.beginPath(); c.moveTo(sx, sy + sh); c.lineTo(sx + sw, sy + sh); c.stroke();
+      if(s < steps - 1){ c.beginPath(); c.moveTo(sx+sw, sy+sh); c.lineTo(sx+sw, sy); c.stroke(); }
+    }
+    curX += mw;
+
+    // Площадка — штриховка
+    c.save();
+    c.beginPath(); c.rect(curX, oy, lw, ph); c.clip();
+    c.strokeStyle = color + '88'; c.lineWidth = 0.6;
+    const hStep = Math.max(4, ph * 0.3);
+    for(let hx = -ph; hx < lw + ph; hx += hStep) {
+      c.beginPath(); c.moveTo(curX + hx, oy); c.lineTo(curX + hx + ph, oy + ph); c.stroke();
+    }
+    c.restore();
+    // Рамка площадки
+    c.strokeStyle = color; c.lineWidth = 1.2;
+    c.strokeRect(curX + 0.5, oy + 0.5, lw - 1, ph - 1);
+    // Подпись площадки
+    if(lw > 14 && ph > 10) {
+      c.fillStyle = color; c.font = `bold ${Math.min(9, ph * 0.35)}px sans-serif`;
+      c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.fillText('П', curX + lw / 2, oy + ph / 2);
+    }
+    curX += lw;
+  }
+}
+
+function drawGhost(m,ok){
+  const b=bbox(m),cp=m2c(b.x,b.y),pw=b.l*scale,ph=b.w*scale;
+  ctx.globalAlpha=.45; ctx.fillStyle=ok?'#C8F0D8':'#FADBD8'; ctx.fillRect(cp.x,cp.y,pw,ph); ctx.globalAlpha=1;
+  ctx.strokeStyle=ok?'#1E8449':'#C0392B'; ctx.lineWidth=1.5; ctx.setLineDash([5,4]);
+  ctx.strokeRect(cp.x+.75,cp.y+.75,pw-1.5,ph-1.5); ctx.setLineDash([]);
+  if(pw>26&&ph>13){
+    ctx.fillStyle=ok?'#1A5C30':'#922B21'; ctx.font=`600 ${Math.max(8,Math.min(11,ph*.22))}px 'IBM Plex Mono'`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(`${b.l.toFixed(1)}×${b.w.toFixed(1)}`,cp.x+pw/2,cp.y+ph/2);
+  }
+}
+
+function drawPerimeter(){
+  const R=.1,occ=new Set();
+  modules.filter(m=>!getType(m).extStair).forEach(m=>{ const b=bbox(m),x0=Math.round(b.x/R),y0=Math.round(b.y/R),lc=Math.round(b.l/R),wc=Math.round(b.w/R);
+    for(let ix=0;ix<lc;ix++) for(let iy=0;iy<wc;iy++) occ.add(`${x0+ix},${y0+iy}`); });
+  ctx.strokeStyle='#E74C3C'; ctx.lineWidth=2.5;
+  occ.forEach(k=>{
+    const [x,y]=k.split(',').map(Number);
+    [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>{
+      if(!occ.has(`${x+dx},${y+dy}`)){
+        let x1,y1,x2,y2;
+        if(dx===1)  {x1=(x+1)*R;y1=y*R;    x2=(x+1)*R;y2=(y+1)*R;}
+        if(dx===-1) {x1=x*R;    y1=y*R;    x2=x*R;    y2=(y+1)*R;}
+        if(dy===1)  {x1=x*R;    y1=(y+1)*R;x2=(x+1)*R;y2=(y+1)*R;}
+        if(dy===-1) {x1=x*R;    y1=y*R;    x2=(x+1)*R;y2=y*R;}
+        const c1=m2c(x1,y1),c2=m2c(x2,y2);
+        ctx.beginPath(); ctx.moveTo(c1.x,c1.y); ctx.lineTo(c2.x,c2.y); ctx.stroke();
+      }
+    });
+  });
+}
+
+// ── DIMENSIONS: габаритные размеры + привязки углов
+function drawDimensions() {
+  if(!modules.length) return;
+
+  // ── 1. Собираем BBOX всего здания
+  let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+  modules.filter(m=>!getType(m).extStair).forEach(m=>{
+    const b=bbox(m);
+    minX=Math.min(minX,b.x); minY=Math.min(minY,b.y);
+    maxX=Math.max(maxX,b.x+b.l); maxY=Math.max(maxY,b.y+b.w);
+  });
+  const bldW=maxX-minX, bldH=maxY-minY;
+
+  // ── 2. Собираем уникальные X- и Y-координаты модульных границ
+  //     (для промежуточных размеров по горизонтали и вертикали)
+  const xBreaks=new Set(), yBreaks=new Set();
+  modules.filter(m=>!getType(m).extStair).forEach(m=>{
+    const b=bbox(m);
+    xBreaks.add(b.x); xBreaks.add(b.x+b.l);
+    yBreaks.add(b.y); yBreaks.add(b.y+b.w);
+  });
+  const xs=[...xBreaks].sort((a,b)=>a-b);
+  const ys=[...yBreaks].sort((a,b)=>a-b);
+
+  // ── Вспомогательные функции рисования
+  const DIM_CLR  = '#1A3A8F'; // синий для размерных линий
+  const CORN_CLR = '#B85C00'; // янтарный для привязок углов
+  const ARROW    = 5;         // px, длина засечки
+  const GAP      = 14;        // px, отступ размерной линии от объекта
+  const GAP2     = GAP + 20;  // второй ряд (общий размер)
+
+  ctx.save();
+
+  // ── 3. Горизонтальные промежуточные размеры (снизу здания)
+  const baseY_px = m2c(0, maxY).y + GAP;
+  ctx.strokeStyle=DIM_CLR; ctx.fillStyle=DIM_CLR;
+  ctx.lineWidth=1; ctx.font=`bold 11px 'IBM Plex Mono'`;
+  ctx.textBaseline='top'; ctx.textAlign='center';
+
+  if(xs.length > 2) {
+    // промежуточные сегменты
+    for(let i=0;i<xs.length-1;i++){
+      const x1=m2c(xs[i],0).x, x2=m2c(xs[i+1],0).x;
+      const segM=(xs[i+1]-xs[i]).toFixed(2);
+      // засечки
+      ctx.beginPath(); ctx.moveTo(x1,baseY_px-ARROW); ctx.lineTo(x1,baseY_px+ARROW); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x2,baseY_px-ARROW); ctx.lineTo(x2,baseY_px+ARROW); ctx.stroke();
+      // линия
+      ctx.beginPath(); ctx.moveTo(x1,baseY_px); ctx.lineTo(x2,baseY_px); ctx.stroke();
+      // подпись
+      ctx.fillText(`${segM}`,( x1+x2)/2, baseY_px+3);
+    }
+  }
+
+  // общий горизонтальный размер
+  {
+    const y2=baseY_px + (xs.length>2 ? GAP+14 : 0);
+    const x1=m2c(minX,0).x, x2=m2c(maxX,0).x;
+    ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(x1,y2-ARROW); ctx.lineTo(x1,y2+ARROW); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x2,y2-ARROW); ctx.lineTo(x2,y2+ARROW); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x1,y2); ctx.lineTo(x2,y2); ctx.stroke();
+    ctx.font=`bold 13px 'IBM Plex Mono'`;
+    ctx.fillText(`${bldW.toFixed(2)} м`,(x1+x2)/2, y2+3);
+  }
+
+  // ── 4. Вертикальные промежуточные размеры (справа от здания)
+  const baseX_px = m2c(maxX, 0).x + GAP;
+  ctx.lineWidth=1; ctx.font=`bold 11px 'IBM Plex Mono'`;
+  ctx.textBaseline='middle'; ctx.textAlign='left';
+
+  if(ys.length > 2) {
+    for(let i=0;i<ys.length-1;i++){
+      const y1=m2c(0,ys[i]).y, y2=m2c(0,ys[i+1]).y;
+      const segM=(ys[i+1]-ys[i]).toFixed(2);
+      ctx.beginPath(); ctx.moveTo(baseX_px-ARROW,y1); ctx.lineTo(baseX_px+ARROW,y1); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(baseX_px-ARROW,y2); ctx.lineTo(baseX_px+ARROW,y2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(baseX_px,y1); ctx.lineTo(baseX_px,y2); ctx.stroke();
+      ctx.fillText(`${segM}`, baseX_px+5, (y1+y2)/2);
+    }
+  }
+
+  // общий вертикальный размер
+  {
+    const x2=baseX_px + (ys.length>2 ? GAP+36 : 0);
+    const y1=m2c(0,minY).y, y2=m2c(0,maxY).y;
+    ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(x2-ARROW,y1); ctx.lineTo(x2+ARROW,y1); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x2-ARROW,y2); ctx.lineTo(x2+ARROW,y2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x2,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    ctx.font=`bold 13px 'IBM Plex Mono'`;
+    ctx.save();
+    ctx.translate(x2+16,(y1+y2)/2);
+    ctx.rotate(Math.PI/2);
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(`${bldH.toFixed(2)} м`,0,0);
+    ctx.restore();
+  }
+
+  // ── 5. Координатные привязки углов (от начала координат площадки)
+  ctx.strokeStyle=CORN_CLR; ctx.fillStyle=CORN_CLR;
+  ctx.lineWidth=1; ctx.font=`10px 'IBM Plex Mono'`;
+  ctx.setLineDash([3,3]);
+
+  const corners=[
+    {mx:minX, my:minY, ax:'left',  ay:'bottom', ox:-4,  oy:-4  },
+    {mx:maxX, my:minY, ax:'right', ay:'bottom', ox: 4,  oy:-4  },
+    {mx:maxX, my:maxY, ax:'right', ay:'top',    ox: 4,  oy: 4  },
+    {mx:minX, my:maxY, ax:'left',  ay:'top',    ox:-4,  oy: 4  },
+  ];
+
+  corners.forEach(c=>{
+    const cp=m2c(c.mx,c.my);
+    // крестик в углу
+    ctx.beginPath();
+    ctx.moveTo(cp.x-5,cp.y); ctx.lineTo(cp.x+5,cp.y); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cp.x,cp.y-5); ctx.lineTo(cp.x,cp.y+5); ctx.stroke();
+
+    // подпись координат
+    const label=`(${c.mx.toFixed(2)}; ${c.my.toFixed(2)})`;
+    ctx.textAlign   = c.ax==='left' ? 'right' : 'left';
+    ctx.textBaseline= c.ay==='bottom' ? 'bottom' : 'top';
+    ctx.fillText(label, cp.x + c.ox, cp.y + c.oy);
+  });
+
+  ctx.setLineDash([]);
+  ctx.restore();
+}
+
+// ══════════════════════════════════════════════
+// ЗАЯВКА В DOORHAN НА РАСЧЁТ КОНСТРУКЦИЙ
+// ══════════════════════════════════════════════
+function generateRequest() {
+  if(!modules.length){ alert('Разместите хотя бы один модуль на плане'); return; }
+
+  const now     = new Date();
+  const dateStr = now.toLocaleDateString('ru-RU', {day:'2-digit',month:'long',year:'numeric'});
+  const reqNum  = `ЗАЯ-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}-${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+
+  const cl      = getClientData();
+  const client  = cl.name;
+  const object  = cl.address;
+  const manager = document.getElementById('kp-manager').value || '—';
+
+  // Параметры из калькулятора
+  const floors  = +document.getElementById('cp-floors').value || 1;
+  const innerH  = +document.getElementById('cp-floorh').value;
+  const outerH  = (innerH + 0.23).toFixed(2);
+  const ins     = document.getElementById('cp-insul');
+  const insText = ins ? ins.options[ins.selectedIndex].text : '—';
+  const sysType = document.getElementById('cp-sysType');
+  const sysText = sysType ? sysType.options[sysType.selectedIndex].text : '—';
+  const climate = document.getElementById('cp-climate');
+  const climText = climate ? climate.options[climate.selectedIndex].text : '—';
+
+  // Модули (без наружных лестниц — их нет в поставке DoorHan как модульных единиц)
+  const bldMods = modules.filter(m => !getType(m).extStair);
+  const area1   = bldMods.reduce((s,m)=>{ const b=bbox(m); return s+b.l*b.w; },0);
+  const perim   = computePerimeter();
+  const panelA  = (perim * (innerH+0.23) * floors).toFixed(1);
+  const fullArea = (area1 * floors).toFixed(1);
+  const volume  = (area1 * (innerH+0.23) * floors).toFixed(0);
+
+  // Спецификация модулей — группируем по типу
+  const modGroups = {};
+  bldMods.forEach(m => {
+    const mt = getType(m);
+    const b  = bbox(m);
+    const key = mt.id;
+    if(!modGroups[key]) modGroups[key] = { mt, count:0, rotated:0 };
+    modGroups[key].count++;
+    if(m.rotated) modGroups[key].rotated++;
+  });
+
+  // Наружные лестницы — отдельный раздел
+  const extStairs = modules.filter(m => getType(m).extStair);
+  const extStairGroups = {};
+  extStairs.forEach(m => {
+    const mt = getType(m);
+    if(!extStairGroups[mt.id]) extStairGroups[mt.id] = { mt, count:0 };
+    extStairGroups[mt.id].count++;
+  });
+
+  // MB-K: умножаем на этажи
+  const sysIsMBK = document.getElementById('cp-sysType').value === 'MBK';
+
+  // --- Спецификация HTML ---
+  let specRows = '';
+  let totalMods = 0, totalMass = 0;
+  Object.values(modGroups).forEach((g, i) => {
+    const countPerFloor = g.count;
+    const countTotal    = sysIsMBK ? countPerFloor * floors : countPerFloor;
+    const mass          = countTotal * g.mt.massUnit;
+    const l = g.mt.l.toFixed(2), w = g.mt.w.toFixed(2);
+    const tag = g.mt.stair ? '(лестн.)' : '';
+    totalMods += countTotal;
+    totalMass += mass;
+    specRows += `<tr>
+      <td>${i+1}</td>
+      <td>${g.mt.name} ${tag}</td>
+      <td class="c">${l} × ${w}</td>
+      <td class="c">${g.mt.massUnit}</td>
+      <td class="c">${countPerFloor}</td>
+      <td class="c">${floors}</td>
+      <td class="c"><b>${countTotal}</b></td>
+      <td class="c">${fmt(mass)}</td>
+    </tr>`;
+  });
+  specRows += `<tr class="tot">
+    <td colspan="6">Итого блок-модулей</td>
+    <td class="c"><b>${totalMods}</b></td>
+    <td class="c"><b>${fmt(totalMass)} кг</b></td>
+  </tr>`;
+
+  // Сэндвич-панели — одна строка
+  const sandwichRows = `<tr>
+    <td>1</td>
+    <td>Сэндвич-панели стеновые (периметр здания)</td>
+    <td class="c">толщ. ${document.getElementById('cp-insul').value} мм</td>
+    <td class="c">—</td>
+    <td class="c" colspan="2">${floors} эт. × периметр ${perim.toFixed(1)} м</td>
+    <td class="c"><b>${panelA} м²</b></td>
+    <td class="c">—</td>
+  </tr>`;
+
+  // Наружные лестницы
+  let stairRows = '';
+  Object.values(extStairGroups).forEach((g,i) => {
+    stairRows += `<tr>
+      <td>${i+1}</td>
+      <td>${g.mt.name}</td>
+      <td class="c">${g.mt.l.toFixed(2)} × ${g.mt.w.toFixed(2)} м</td>
+      <td class="c">${g.mt.massUnit} кг</td>
+      <td class="c" colspan="2">1 (не умножается на этажи)</td>
+      <td class="c"><b>${g.count}</b></td>
+      <td class="c">${fmt(g.mt.massUnit * g.count)} кг</td>
+    </tr>`;
+  });
+
+  // Поэтажный план — уменьшенный масштаб для заявки (25 px/м = вдвое меньше стандарта)
+  const planImg = getBuildingPlanImage(30, 25);
+
+  // --- Поэтажные планы HTML ---
+  // Для MB-K: каждый этаж идентичен (одинаковые модули), рисуем 1 план с пояснением
+  // Для MB-N: тоже 1 план 1-го этажа (общая рама)
+  let floorsPlansHtml = '';
+  for(let f = 1; f <= floors; f++) {
+    floorsPlansHtml += `
+    <div class="floor-plan">
+      <div class="floor-label">Этаж ${f} из ${floors}
+        ${sysIsMBK ? '— идентичная раскладка модулей (MB-K)' : '(MB-N, общая рама)'}
+      </div>
+      <img src="${planImg}" alt="план этаж ${f}">
+      <div class="plan-note">
+        Площадь этажа: ${area1.toFixed(1)} м² &nbsp;·&nbsp;
+        Модулей на этаже: ${Object.values(modGroups).reduce((s,g)=>s+g.count,0)} шт
+      </div>
+    </div>`;
+    if(f < floors) floorsPlansHtml += '<div class="page-break"></div>';
+  }
+
+  const html = `<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Заявка ${reqNum}</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&family=PT+Mono:wght@400;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'PT Sans',sans-serif;font-size:10pt;color:#111;background:#fff;padding:14mm 16mm;}
+
+.header{display:flex;align-items:flex-start;justify-content:space-between;border-bottom:3px solid #0A3D8F;padding-bottom:10px;margin-bottom:14px;}
+.header-left{}
+.logo-name{font-size:18pt;font-weight:700;color:#C8102E;line-height:1;}
+.logo-sub{font-size:8pt;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-top:2px;}
+.header-right{text-align:right;font-size:8.5pt;color:#444;line-height:1.7;}
+.header-right a{color:#0A3D8F;}
+
+.doc-title{text-align:center;margin:12px 0 6px;}
+.doc-title h1{font-size:14pt;font-weight:700;color:#0A3D8F;}
+.doc-title .num{font-size:8.5pt;color:#888;font-family:'PT Mono',monospace;margin-top:3px;}
+.doc-date{text-align:right;font-size:8.5pt;color:#888;margin-bottom:12px;}
+
+.meta{width:100%;border-collapse:collapse;margin-bottom:14px;font-size:9.5pt;}
+.meta td{padding:4px 8px;border:1px solid #DDD;}
+.meta td:first-child{font-weight:700;background:#F0F4FF;width:35%;font-size:8.5pt;text-transform:uppercase;letter-spacing:.03em;color:#555;}
+
+h2{font-size:11pt;font-weight:700;color:#0A3D8F;margin:14px 0 7px;padding-bottom:3px;border-bottom:1.5px solid #C8D8F8;}
+
+/* SPEC TABLE */
+.spec{width:100%;border-collapse:collapse;font-size:9pt;margin-bottom:6px;}
+.spec th{background:#0A3D8F;color:#fff;padding:5px 7px;text-align:left;font-size:8.5pt;}
+.spec th.c,.spec td.c{text-align:center;}
+.spec td{padding:4px 7px;border-bottom:1px solid #E8E8E8;}
+.spec tr:nth-child(even) td{background:#F6F8FF;}
+.spec tr.tot td{background:#0A3D8F;color:#fff;font-size:9.5pt;padding:6px 7px;}
+.spec td b{color:#0A3D8F;}
+.spec tr.tot td b{color:#FFD700;}
+
+/* PARAMS */
+.params-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;}
+.param-card{background:#F0F4FF;border:1px solid #C8D8F8;border-radius:4px;padding:8px 10px;}
+.param-label{font-size:7.5pt;color:#666;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;}
+.param-val{font-family:'PT Mono',monospace;font-size:11pt;font-weight:700;color:#0A3D8F;}
+.param-unit{font-size:8pt;color:#888;font-weight:400;}
+
+/* FLOOR PLANS */
+.floor-plan{margin-bottom:16px;}
+.floor-label{font-size:9.5pt;font-weight:700;color:#0A3D8F;margin-bottom:6px;padding:4px 8px;background:#F0F4FF;border-radius:3px;}
+.floor-plan img{max-width:100%;border:1px solid #DDD;border-radius:3px;}
+.plan-note{font-size:8pt;color:#888;margin-top:4px;text-align:center;}
+
+/* DISCLAIMER */
+.disclaimer{background:#FFF8F0;border:1px solid #F0C060;border-radius:4px;padding:9px 12px;font-size:8.5pt;color:#7A5500;margin-top:14px;line-height:1.6;}
+
+/* SIGN */
+.sign-table{width:100%;border-collapse:collapse;margin-top:20px;font-size:9.5pt;}
+.sign-table td{padding:6px 8px;}
+.sign-line{display:inline-block;border-bottom:1px solid #111;width:160px;}
+
+.footer{margin-top:18px;border-top:1px solid #DDD;padding-top:8px;display:flex;justify-content:space-between;font-size:8pt;color:#888;}
+
+@media print{
+  body{padding:8mm 10mm;}
+  .page-break{page-break-after:always;}
+  @page{size:A4;margin:0;}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <img src="https://fabok.ru/wp-content/uploads/2022/05/cropped-Цвет-круг-1-русский.png"
+         style="height:44px;width:auto;margin-bottom:4px;" onerror="this.style.display='none'" alt="">
+    <div class="logo-name">Фабрика Окон</div>
+    <div class="logo-sub">ООО «Фабрика» · Официальный дилер DoorHan · Шерегеш / Новокузнецк</div>
+  </div>
+  <div class="header-right">
+    <b>Кому:</b> DoorHan — Завод модульных зданий<br>
+    doorhan.ru &nbsp;·&nbsp; +7 (495) 933-24-33<br>
+    <br>
+    <b>От:</b> ООО «Фабрика»<br>
+    +7 (3843) 60-54-90 &nbsp;·&nbsp; <a href="mailto:info@fabok.ru">info@fabok.ru</a>
+  </div>
+</div>
+
+<div class="doc-title">
+  <h1>ЗАЯВКА НА РАСЧЁТ КОНСТРУКЦИЙ МОДУЛЬНОГО ЗДАНИЯ</h1>
+  <div class="num">№ ${reqNum}</div>
+</div>
+<div class="doc-date">Дата: ${dateStr} &nbsp;·&nbsp; Менеджер: ${manager}</div>
+
+<table class="meta">
+  <tr><td>Заказчик / Клиент</td><td>${client}</td></tr>
+  <tr><td>Телефон</td><td>${cl.phone}${cl.messengers!=='—'?' &nbsp;·&nbsp; '+cl.messengers:''}</td></tr>
+  <tr><td>E-mail</td><td>${cl.email}</td></tr>
+  <tr><td>Объект / Адрес</td><td>${object}</td></tr>
+  <tr><td>Конструктивная система</td><td>${sysText}</td></tr>
+  <tr><td>Климатический район</td><td>${climText}</td></tr>
+  <tr><td>Утепление стен</td><td>${insText}</td></tr>
+  <tr><td>Этажность</td><td>${floors} эт. &nbsp;·&nbsp; Внутренняя высота этажа: ${innerH} м &nbsp;·&nbsp; Наружная: ${outerH} м</td></tr>
+</table>
+
+<h2>Ключевые показатели здания</h2>
+<div class="params-grid">
+  <div class="param-card"><div class="param-label">Площадь 1 этажа</div><div class="param-val">${area1.toFixed(1)} <span class="param-unit">м²</span></div></div>
+  <div class="param-card"><div class="param-label">Полная площадь</div><div class="param-val">${fullArea} <span class="param-unit">м²</span></div></div>
+  <div class="param-card"><div class="param-label">Строит. объём</div><div class="param-val">${volume} <span class="param-unit">м³</span></div></div>
+  <div class="param-card"><div class="param-label">Периметр здания</div><div class="param-val">${perim.toFixed(1)} <span class="param-unit">м</span></div></div>
+</div>
+
+<h2>Спецификация блок-модулей (поставка DoorHan)</h2>
+<table class="spec">
+  <thead><tr>
+    <th style="width:30px">№</th>
+    <th>Наименование</th>
+    <th class="c">Размер (Д×Ш)</th>
+    <th class="c">Масса ед., кг</th>
+    <th class="c">Шт/этаж</th>
+    <th class="c">Этажей</th>
+    <th class="c">Итого шт</th>
+    <th class="c">Масса общ., кг</th>
+  </tr></thead>
+  <tbody>${specRows}</tbody>
+</table>
+
+<h2>Сэндвич-панели (поставка DoorHan)</h2>
+<table class="spec">
+  <thead><tr>
+    <th style="width:30px">№</th>
+    <th>Наименование</th>
+    <th class="c">Толщина / Тип</th>
+    <th class="c">Масса</th>
+    <th class="c" colspan="2">Основание расчёта</th>
+    <th class="c">Площадь</th>
+    <th class="c">Примечание</th>
+  </tr></thead>
+  <tbody>${sandwichRows}</tbody>
+</table>
+<p style="font-size:8pt;color:#888;margin-top:4px;">* Площадь сэндвич-панелей рассчитана по наружному периметру здания × наружную высоту этажа × количество этажей. Кровельные панели и перегородки в настоящую заявку не включены.</p>
+
+${stairRows ? `<h2>Наружные лестницы DoorHan</h2>
+<table class="spec">
+  <thead><tr>
+    <th style="width:30px">№</th><th>Наименование</th><th class="c">Размер</th><th class="c">Масса ед.</th>
+    <th class="c" colspan="2">Количество</th><th class="c">Итого шт</th><th class="c">Масса общ.</th>
+  </tr></thead>
+  <tbody>${stairRows}</tbody>
+</table>` : ''}
+
+<div class="page-break"></div>
+
+<h2>Поэтажные планы расстановки модулей</h2>
+${floorsPlansHtml}
+
+<div class="disclaimer">
+  ℹ <b>Примечание:</b> Настоящая заявка содержит предварительную спецификацию на основе схемы расстановки модулей, разработанной в программе-конструкторе ООО «Фабрика». Количество и состав модулей могут быть уточнены на этапе разработки проектной документации DoorHan.<br>
+  Просим предоставить коммерческое предложение на поставку указанных конструкций с учётом текущих прайсов и сроков изготовления.
+</div>
+
+<table class="sign-table">
+  <tr>
+    <td style="width:50%">Заявку составил:<br><br>
+      <span class="sign-line"></span><br>
+      <span style="font-size:8pt;color:#888;">${manager} / ООО «Фабрика»</span>
+    </td>
+    <td style="width:50%">Принял к расчёту (DoorHan):<br><br>
+      <span class="sign-line"></span><br>
+      <span style="font-size:8pt;color:#888;">ФИО / должность</span>
+    </td>
+  </tr>
+</table>
+
+<div class="footer">
+  <span>ООО «Фабрика» · fabok.ru · +7 (3843) 60-54-90 · info@fabok.ru</span>
+  <span>${reqNum} · ${dateStr}</span>
+</div>
+
+</body>
+</html>`;
+
+  const win = window.open('', '_blank', 'width=960,height=1200');
+  if(!win){ alert('Разрешите всплывающие окна в браузере и попробуйте снова.'); return; }
+  win.document.write(html);
+  win.document.close();
+  win.onload = () => setTimeout(() => win.print(), 600);
+}
+
+function generateKP() {
+  // Собираем данные из DOM результатов
+  const get = id => (document.getElementById(id)||{}).textContent || '—';
+
+  const cl      = getClientData();
+  const client  = cl.name    || 'не указан';
+  const object  = cl.address || 'не указан';
+  const manager = document.getElementById('kp-manager').value || 'не указан';
+
+  const purpose = document.getElementById('cp-purpose');
+  const purposeText = purpose ? purpose.options[purpose.selectedIndex].text : '—';
+  const sysType = document.getElementById('cp-sysType');
+  const sysText = sysType ? sysType.options[sysType.selectedIndex].text : '—';
+  const floors  = get('cp-floors-val');
+  const innerH  = document.getElementById('cp-floorh');
+  const innerHText = innerH ? innerH.options[innerH.selectedIndex].text : '—';
+  const climate = document.getElementById('cp-climate');
+  const climateText = climate ? climate.options[climate.selectedIndex].text : '—';
+
+  // Снимок плана с canvas
+  const planImg = getBuildingPlanImage(40, 50);
+
+  // Поэтажные планы (как в заявке)
+  const floors_kp  = +document.getElementById('cp-floors').value || 1;
+  const sysIsMBK_kp = document.getElementById('cp-sysType').value === 'MBK';
+  const bldMods_kp  = modules.filter(m => !getType(m).extStair);
+  const area1_kp    = bldMods_kp.reduce((s,m)=>{ const b=bbox(m); return s+b.l*b.w; },0);
+  let floorsPlansKP = '';
+  for(let f=1; f<=floors_kp; f++){
+    floorsPlansKP += `
+    <div style="margin-bottom:16px;">
+      <div style="font-size:9.5pt;font-weight:700;color:#1A5C30;margin-bottom:6px;padding:4px 8px;background:#E8F5EE;border-radius:3px;">
+        Этаж ${f} из ${floors_kp} ${sysIsMBK_kp?'— одинаковая раскладка (MB-K)':'(MB-N, общая рама)'}
+      </div>
+      <img src="${planImg}" alt="план этаж ${f}" style="max-width:100%;border:1px solid #DDD;border-radius:3px;">
+      <div style="font-size:8pt;color:#888;margin-top:4px;text-align:center;">
+        Площадь этажа: ${area1_kp.toFixed(1)} м² · Модулей: ${bldMods_kp.length} шт
+      </div>
+    </div>
+    ${f<floors_kp?'<div style="page-break-after:always;"></div>':''}`;
+  }
+
+  // Дата
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('ru-RU', { day:'2-digit', month:'long', year:'numeric' });
+
+  // Номер КП — дата + время
+  const kpNum = `КП-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}-${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+
+  // Строим смету из cost-rows (только видимые строки)
+  const costRowsEl = document.querySelectorAll('#cost-results .cost-row:not(.total)');
+  let smetaRows = '';
+  costRowsEl.forEach(row => {
+    const lbl = row.querySelector('.cost-row-label');
+    const val = row.querySelector('.cost-row-val');
+    if(lbl && val && row.style.display !== 'none') {
+      smetaRows += `<tr><td>${lbl.textContent.trim()}</td><td class="money">${val.textContent.trim()}</td></tr>`;
+    }
+  });
+
+  const totalText = get('cr-total');
+  const total2Text = get('cr-total2');
+
+  // Опции
+  const detailRows = document.querySelectorAll('#cr-extras-detail .cost-row');
+  let detailHtml = '';
+  detailRows.forEach(row => {
+    const lbl = row.querySelector('.cost-row-label');
+    const val = row.querySelector('.cost-row-val');
+    if(lbl && val) detailHtml += `<tr><td style="padding-left:16px;color:#555">↳ ${lbl.textContent.trim()}</td><td class="money">${val.textContent.trim()}</td></tr>`;
+  });
+
+  const html = `<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>КП ${kpNum}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&family=PT+Serif:wght@400;700&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'PT Sans',sans-serif;font-size:11pt;color:#1A1614;background:#fff;padding:16mm 18mm;}
+  /* HEADER */
+  .kp-header{display:flex;align-items:center;justify-content:space-between;
+    border-bottom:3px solid #C8102E;padding-bottom:10px;margin-bottom:14px;}
+  .kp-logo{display:flex;align-items:center;gap:12px;}
+  .kp-logo img{height:52px;width:auto;}
+  .kp-logo-text{font-family:'PT Serif',serif;}
+  .kp-logo-name{font-size:20pt;font-weight:700;color:#C8102E;line-height:1;}
+  .kp-logo-sub{font-size:8pt;color:#888;letter-spacing:.04em;text-transform:uppercase;}
+  .kp-contacts{text-align:right;font-size:9pt;color:#444;line-height:1.7;}
+  .kp-contacts a{color:#C8102E;text-decoration:none;}
+  .kp-contacts strong{color:#1A1614;}
+  /* TITLE */
+  .kp-title{text-align:center;margin:16px 0 10px;}
+  .kp-title h1{font-family:'PT Serif',serif;font-size:16pt;font-weight:700;color:#1A1614;}
+  .kp-title .kp-num{font-size:9pt;color:#888;margin-top:3px;}
+  .kp-date{font-size:9pt;color:#888;text-align:right;margin-bottom:14px;}
+  /* META */
+  .meta-table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:10pt;}
+  .meta-table td{padding:5px 8px;border:1px solid #DDD;}
+  .meta-table td:first-child{font-weight:700;background:#F7F5F2;width:38%;color:#555;font-size:9pt;text-transform:uppercase;letter-spacing:.03em;}
+  /* SECTION */
+  h2{font-family:'PT Serif',serif;font-size:12pt;font-weight:700;color:#C8102E;
+    margin:18px 0 8px;padding-bottom:4px;border-bottom:1px solid #EEE;}
+  /* PARAMS TABLE */
+  .params-table{width:100%;border-collapse:collapse;margin-bottom:6px;font-size:10pt;}
+  .params-table th{background:#2C3038;color:#fff;padding:6px 10px;text-align:left;font-size:9pt;font-weight:600;letter-spacing:.03em;}
+  .params-table td{padding:5px 10px;border-bottom:1px solid #EEE;}
+  .params-table tr:nth-child(even) td{background:#F9F8F6;}
+  .params-table td.val{font-weight:700;text-align:right;color:#1A1614;}
+  /* SMETA */
+  .smeta-table{width:100%;border-collapse:collapse;font-size:10pt;}
+  .smeta-table th{background:#C8102E;color:#fff;padding:7px 10px;text-align:left;font-size:9pt;}
+  .smeta-table th.money{text-align:right;}
+  .smeta-table td{padding:5px 10px;border-bottom:1px solid #EEE;}
+  .smeta-table tr:nth-child(even) td{background:#FDF8F8;}
+  .smeta-table td.money{text-align:right;font-weight:600;font-family:monospace;}
+  .smeta-table .total-row td{background:#1A1614;color:#FFD700;font-weight:700;font-size:11pt;padding:8px 10px;}
+  .smeta-table .total-row td.money{font-family:monospace;font-size:13pt;}
+  /* PLAN */
+  .plan-wrap{text-align:center;margin:10px 0;}
+  .plan-wrap img{max-width:100%;border:1px solid #DDD;border-radius:4px;}
+  .plan-caption{font-size:8pt;color:#888;margin-top:4px;}
+  /* DISCLAIMER */
+  .disclaimer{background:#FFF8F0;border:1px solid #F0C060;border-radius:4px;
+    padding:10px 14px;font-size:9pt;color:#7A5500;margin-top:16px;line-height:1.6;}
+  /* FOOTER */
+  .kp-footer{margin-top:24px;border-top:1px solid #DDD;padding-top:10px;
+    display:flex;justify-content:space-between;font-size:8.5pt;color:#888;}
+  .sign-block{margin-top:20px;}
+  .sign-block table{width:100%;border-collapse:collapse;}
+  .sign-block td{padding:6px 10px;font-size:10pt;}
+  .sign-block .sign-line{border-bottom:1px solid #1A1614;display:inline-block;width:160px;}
+  @media print{
+    body{padding:10mm 12mm;}
+    .no-print{display:none;}
+    @page{size:A4;margin:0;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ШАПКА -->
+<div class="kp-header">
+  <div class="kp-logo">
+    <img src="https://fabok.ru/wp-content/uploads/2022/05/cropped-Цвет-круг-1-русский.png"
+         onerror="this.style.display='none'" alt="Фабрика Окон">
+    <div class="kp-logo-text">
+      <div class="kp-logo-name">Фабрика Окон</div>
+      <div class="kp-logo-sub">ООО «Фабрика» · Модульные здания DoorHan · Новокузнецк / Шерегеш</div>
+    </div>
+  </div>
+  <div class="kp-contacts">
+    <strong>ООО «Фабрика»</strong><br>
+    Офис Шерегеш: <a href="tel:+79234712525">+7 (923) 471-25-25</a><br>
+    E-mail: <a href="mailto:sheregesh@fabok.ru">sheregesh@fabok.ru</a><br>
+    Сайт: <a href="https://fabok.ru" target="_blank">fabok.ru</a>
+  </div>
+</div>
+
+<!-- ЗАГОЛОВОК -->
+<div class="kp-title">
+  <h1>Коммерческое предложение</h1>
+  <div class="kp-num">№ ${kpNum}</div>
+</div>
+<div class="kp-date">Дата составления: ${dateStr}</div>
+
+<!-- МЕТА -->
+<table class="meta-table">
+  <tr><td>Клиент / Организация</td><td>${client}</td></tr>
+  <tr><td>Телефон</td><td>${cl.phone}${cl.messengers!=='—'?' &nbsp;·&nbsp; '+cl.messengers:''}</td></tr>
+  <tr><td>E-mail</td><td>${cl.email}</td></tr>
+  <tr><td>Объект строительства</td><td>${object}</td></tr>
+  <tr><td>Менеджер</td><td>${manager}</td></tr>
+</table>
+
+<!-- ПАРАМЕТРЫ ЗДАНИЯ -->
+<h2>1. Технические характеристики здания</h2>
+<table class="params-table">
+  <tr><th>Параметр</th><th style="text-align:right">Значение</th></tr>
+  <tr><td>Назначение</td><td class="val">${purposeText}</td></tr>
+  <tr><td>Конструктивная система</td><td class="val">${sysText}</td></tr>
+  <tr><td>Этажность</td><td class="val">${floors} эт.</td></tr>
+  <tr><td>Внутренняя высота этажа</td><td class="val">${innerHText}</td></tr>
+  <tr><td>Климатический район</td><td class="val">${climateText}</td></tr>
+  <tr><td>Площадь 1-го этажа</td><td class="val">${get('r-area')} м²</td></tr>
+  <tr><td>Полная площадь помещений</td><td class="val">${get('hs-fullarea')} м²</td></tr>
+  <tr><td>Строительный объём</td><td class="val">${get('hs-volume')} м³</td></tr>
+  <tr><td>Периметр здания</td><td class="val">${get('r-perim')} м</td></tr>
+  <tr><td>Площадь сэндвич-панелей</td><td class="val">${get('r-panel')} м²</td></tr>
+  <tr><td>Количество блок-модулей</td><td class="val">${get('hs-count')} шт</td></tr>
+  <tr><td>Масса конструкции</td><td class="val">${get('r-mass')} кг</td></tr>
+  <tr><td>Снеговая нагрузка</td><td class="val">${get('cr-snow')} кПа</td></tr>
+  <tr><td>Ветровая нагрузка</td><td class="val">${get('cr-wind')} кПа</td></tr>
+  <tr><td>Нагрузка на фундамент (предв.)</td><td class="val">${get('cr-found')} т</td></tr>
+</table>
+
+<!-- ПЛАН -->
+<h2>2. Поэтажные планы расстановки модулей</h2>
+${floorsPlansKP}
+
+<div style="page-break-after:always;"></div>
+
+<!-- ФИНАНСОВЫЙ РАЗДЕЛ -->
+<div style="margin-top:8mm;">
+<h2>3. Предварительная стоимость строительства</h2>
+<table class="smeta-table">
+  <tr><th>Статья затрат</th><th class="money">Сумма</th></tr>
+  ${smetaRows}
+  ${detailHtml}
+  <tr class="total-row"><td>ИТОГО</td><td class="money">${total2Text}</td></tr>
+</table>
+<p style="font-size:9pt;color:#888;margin-top:6px;">
+  В т.ч. НДС — уточняйте у менеджера. &nbsp;|&nbsp;
+  Стоимость 1 м² общей площади: ${get('cr-per-m2')}
+</p>
+</div>
+
+<!-- ДИСКЛЕЙМЕР -->
+<div class="disclaimer">
+  ⚠ <strong>Внимание:</strong> Данное коммерческое предложение носит информационный характер
+  и <strong>не является публичной офертой</strong> в соответствии со статьёй 437 ГК РФ.
+  Указанная стоимость является предварительной и подлежит уточнению после:<br>
+  — выезда специалиста на объект и осмотра площадки под строительство;<br>
+  — геодезической съёмки и анализа рельефа местности;<br>
+  — инженерно-геологических изысканий (при необходимости);<br>
+  — согласования окончательной комплектации и спецификации здания.<br>
+  Цены действительны на дату составления предложения. Стоимость монтажа,
+  доставки и фундамента в данное предложение <strong>не включена</strong>.
+</div>
+
+<!-- ПОДПИСИ -->
+<div class="sign-block" style="margin-top:24px;">
+  <table>
+    <tr>
+      <td style="width:50%">
+        От исполнителя:<br><br>
+        <span class="sign-line"></span><br>
+        <span style="font-size:9pt;color:#888;">подпись / ${manager}</span>
+      </td>
+      <td style="width:50%">
+        От заказчика:<br><br>
+        <span class="sign-line"></span><br>
+        <span style="font-size:9pt;color:#888;">подпись / ${client}</span>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<!-- FOOTER -->
+<div class="kp-footer">
+  <span>ООО «Фабрика» · fabok.ru · +7 (923) 471-25-25 · sheregesh@fabok.ru</span>
+  <span>Документ сформирован автоматически · ${dateStr}</span>
+</div>
+
+</body>
+</html>`;
+
+  // Открываем в новом окне и вызываем печать
+  const win = window.open('', '_blank', 'width=900,height=1200');
+  if(!win){ alert('Разрешите всплывающие окна в браузере и попробуйте снова.'); return; }
+  win.document.write(html);
+  win.document.close();
+  win.onload = () => {
+    setTimeout(() => win.print(), 600);
+  };
+}
+
+// ══════════════════════════════════════════════
+// TELEGRAM
+// ══════════════════════════════════════════════
+function showTgDialog() {
+  if(!modules.length){ alert('Разместите хотя бы один модуль на плане'); return; }
+  const modal = document.getElementById('tg-modal');
+  modal.style.display = 'flex';
+  const cl = getClientData();
+  const recip = document.getElementById('tg-recipient');
+  if(cl.phone && cl.phone !== '—' && !recip.value) {
+    recip.value = cl.phone.replace(/\s|\(|\)|-/g, '');
+  }
+}
+
+function hideTgDialog() {
+  document.getElementById('tg-modal').style.display = 'none';
+  document.getElementById('tg-bot-status').textContent = '';
+}
+
+// Способ 1: t.me/share — открывает Telegram, пользователь сам выбирает контакт
+function sendTgShare() {
+  const cl      = getClientData();
+  const manager = document.getElementById('kp-manager').value || 'Менеджер';
+  const floors  = document.getElementById('cp-floors-val').textContent || '1';
+  const area    = document.getElementById('hs-fullarea').textContent || '—';
+  const cost    = document.getElementById('hs-cost').textContent || '—';
+  const perm2   = document.getElementById('hs-perm2').textContent || '—';
+  const sysEl   = document.getElementById('cp-sysType');
+  const sysText = sysEl ? sysEl.options[sysEl.selectedIndex].text.split('—')[0].trim() : '—';
+  const purpEl  = document.getElementById('cp-purpose');
+  const purpText= purpEl ? purpEl.options[purpEl.selectedIndex].text : '—';
+
+  const msg = [
+    `🏗 Коммерческое предложение — Модульное здание`,
+    ``,
+    `Фабрика Окон · ООО «Фабрика»`,
+    `📞 +7 (923) 471-25-25 · sheregesh@fabok.ru`,
+    ``,
+    `Клиент: ${cl.name}`,
+    `Объект: ${cl.address}`,
+    ``,
+    `Параметры здания:`,
+    `• Назначение: ${purpText}`,
+    `• Система: ${sysText}`,
+    `• Этажей: ${floors}`,
+    `• Площадь помещений: ${area} м²`,
+    ``,
+    `Предварительная стоимость: ${cost} ₽`,
+    `Цена за м²: ${perm2}`,
+    ``,
+    `⚠ Предложение не является офертой. Цена уточняется после осмотра площадки.`,
+    ``,
+    `Менеджер: ${manager}`,
+    `Подробный PDF — по запросу`,
+  ].join('\n');
+
+  const url = `https://t.me/share/url?url=${encodeURIComponent('fabok.ru')}&text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
+}
+
+// Способ 2: через Bot API — отправляет текст напрямую через бота
+async function sendTgBot() {
+  const token  = document.getElementById('tg-token').value.trim();
+  const recip  = document.getElementById('tg-recipient').value.trim();
+  const status = document.getElementById('tg-bot-status');
+
+  if(!token){ status.textContent = '⚠ Введите токен бота'; status.style.color='#B85C00'; return; }
+  if(!recip){ status.textContent = '⚠ Введите username или ID'; status.style.color='#B85C00'; return; }
+
+  status.textContent = '⏳ Отправляю...'; status.style.color='#888';
+
+  const cl      = getClientData();
+  const manager = document.getElementById('kp-manager').value || 'Менеджер';
+  const floors  = document.getElementById('cp-floors-val').textContent || '1';
+  const area    = document.getElementById('hs-fullarea').textContent || '—';
+  const cost    = document.getElementById('hs-cost').textContent || '—';
+  const perm2   = document.getElementById('hs-perm2').textContent || '—';
+  const sysEl   = document.getElementById('cp-sysType');
+  const sysText = sysEl ? sysEl.options[sysEl.selectedIndex].text.split('—')[0].trim() : '—';
+  const purpEl  = document.getElementById('cp-purpose');
+  const purpText= purpEl ? purpEl.options[purpEl.selectedIndex].text : '—';
+
+  const text = [
+    `🏗 Коммерческое предложение`,
+    `Фабрика Окон · ООО «Фабрика»`,
+    `📞 +7 (923) 471-25-25 · sheregesh@fabok.ru`,
+    ``,
+    `👤 Клиент: ${cl.name}`,
+    `📍 Объект: ${cl.address}`,
+    cl.phone && cl.phone !== '—' ? `📱 Тел: ${cl.phone}` : '',
+    ``,
+    `🏢 Назначение: ${purpText}`,
+    `⚙ Система: ${sysText}, ${floors} эт.`,
+    `📐 Площадь: ${area} м²`,
+    ``,
+    `💰 Стоимость: ${cost} ₽`,
+    `📊 Цена м²: ${perm2}`,
+    ``,
+    `⚠ Предложение не является офертой. Цена уточняется после осмотра площадки, геодезии и рельефа.`,
+    ``,
+    `👤 Менеджер: ${manager}`,
+  ].filter(Boolean).join('\n');
+
+  const tgUrl = `https://api.telegram.org/bot${token}/sendMessage`;
+  const body  = JSON.stringify({ chat_id: recip, text });
+
+  // Если страница открыта по HTTPS — пробуем прямой запрос (без прокси)
+  // С GitHub Pages / любого HTTPS-хоста CORS к api.telegram.org разрешён
+  const isHttps = location.protocol === 'https:';
+
+  const attempts = isHttps
+    ? [
+        // 1. Прямой запрос
+        async () => {
+          const r = await fetch(tgUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body
+          });
+          return r.json();
+        },
+        // 2. corsproxy.io как запасной
+        async () => {
+          const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(tgUrl)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            body
+          });
+          return r.json();
+        }
+      ]
+    : [
+        // Локальный файл — только прокси
+        async () => {
+          const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(tgUrl)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            body
+          });
+          return r.json();
+        },
+        async () => {
+          const r = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(tgUrl)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body
+          });
+          return r.json();
+        }
+      ];
+
+  for(const attempt of attempts) {
+    try {
+      const data = await attempt();
+      if(data && data.ok) {
+        status.textContent = '✓ Сообщение отправлено!';
+        status.style.color = '#1A6B3C';
+        setTimeout(hideTgDialog, 1800);
+        return;
+      } else if(data && data.description) {
+        status.textContent = `⚠ Telegram: ${data.description}`;
+        status.style.color = '#C8102E';
+        return;
+      }
+    } catch(e) {
+      continue;
+    }
+  }
+
+  status.textContent = '⚠ Не удалось отправить. Используйте «Поделиться ссылкой».';
+  status.style.color = '#B85C00';
+  setTimeout(() => sendTgShare(), 1500);
+}
+</script>
+</body>
+</html>
